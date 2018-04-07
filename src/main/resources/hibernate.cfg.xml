@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+    "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+
+    <session-factory>
+
+        <!-- Настройки подключения к БД -->
+        <property name="connection.driver_class">
+            com.mysql.jdbc.Driver
+        </property>
+
+        <property name="connection.url">
+            jdbc:mysql://localhost:3306/database
+        </property>
+
+        <property name="connection.username">root</property>
+        <property name="connection.password">123456</property>
+
+        <!-- SQL диалект -->
+        <property name="dialect">
+            org.hibernate.dialect.MySQL57Dialect
+        </property>
+
+        <!-- Отключение кеша второго уровня  -->
+        <property name="cache.provider_class">
+            org.hibernate.cache.internal.NoCacheProvider
+        </property>
+
+        <!-- Вывод в консоль SQL-запросов -->
+        <property name="show_sql">true</property>
+        <property name="hbm2ddl.auto">update</property>
+
+        <!-- Подключение объектов сущностей -->
+        <mapping class="com.server.SessionInfo"/>
+        <mapping class="com.server.Stats"/>
+        <mapping class="com.server.Player"/>
+        <mapping class="com.server.CardLoot"/>
+        <mapping class="com.server.CardInventory"/>
+        <mapping class="com.server.CardHand"/>
+
+    </session-factory>
+
+</hibernate-configuration>
