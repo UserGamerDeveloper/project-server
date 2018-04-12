@@ -1,7 +1,5 @@
 package com.server;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import javax.persistence.Column;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -27,12 +25,13 @@ abstract class CardPlayer {
     @JoinColumn(name = "idPlayer", nullable = false)
     private Player mPlayer;
 
-    public CardPlayer(byte idItem, byte slotId) {
+    public CardPlayer(Player player, byte idItem, byte slotId) {
+        mPlayer = player;
         mIdItem = idItem;
         mSlotId = slotId;
         mDurability = DataBase.ITEMS.get(idItem).getDurability();
     }
-    public CardPlayer(byte idItem, byte slotId, byte slotType, byte durability) {
+    public CardPlayer(byte idItem, byte slotId, byte durability) {
         mIdItem = idItem;
         mSlotId = slotId;
         mDurability = durability;
@@ -50,7 +49,7 @@ abstract class CardPlayer {
     public byte getIdItem() {
         return mIdItem;
     }
-    byte getDurability(){
+    public byte getDurability(){
         return mDurability;
     }
     void setDurability(byte durability){

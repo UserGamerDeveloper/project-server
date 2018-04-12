@@ -1,17 +1,29 @@
 package com.server;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Set;
 
 public final class DataBase {
+    final static ArrayList<Byte> VENDOR_ID = new ArrayList<>(3);
     final static Hashtable<Byte, Mob> MOBS = new Hashtable<>();
     final static Hashtable<Byte, Item> ITEMS = new Hashtable<>();
 
     static {
-        MOBS.put((byte)0, new Mob(0,0,0, CardTableType.VENDOR,9999, CardTableSubType.TRADER, 0));
-        ITEMS.put((byte)0, new Item(1,1, InventoryType.SPELL,1,1,0,(byte)0));
+        VENDOR_ID.add((byte) 0);
+        VENDOR_ID.add((byte) 1);
+        VENDOR_ID.add((byte) 2);
+        MOBS.put((byte)4, new Mob((byte) 4,1,1,1, CardTableType.MOB, 0, CardTableSubType.GOBLIN, 1));
+        MOBS.put((byte)0, new Mob((byte) 0,0,0,0, CardTableType.VENDOR, 9999, CardTableSubType.TRADER, 0));
+        ITEMS.put((byte)0, new Item(1,0, InventoryType.WEAPON, (byte) 0,999,(byte)0));
+        ITEMS.put((byte)1, new Item(1,0, InventoryType.WEAPON, (byte) 0,999,(byte)0));
+        ITEMS.put((byte)17, new Item(1,0, InventoryType.FOOD, (byte) 1,0,(byte)0));
+        ITEMS.put((byte)16, new Item(1,1, InventoryType.SPELL, (byte) 1,0,(byte)0));
     }
 
     static class Mob {
+        private byte mID;
         private int mValueOne;
         private int mValueTwo;
         private int mMoney;
@@ -20,6 +32,20 @@ public final class DataBase {
         private int mSubType;
         private int mExperience;
 
+        public Mob(byte ID, int valueOne, int valueTwo, int money, int type, int gearScore, int subType, int experience) {
+            mID = ID;
+            mValueOne = valueOne;
+            mValueTwo = valueTwo;
+            mMoney = money;
+            mType = type;
+            mGearScore = gearScore;
+            mSubType = subType;
+            mExperience = experience;
+        }
+
+        public byte getID() {
+            return mID;
+        }
         public int getValueOne() {
             return mValueOne;
         }
@@ -41,24 +67,13 @@ public final class DataBase {
         public int getExperience() {
             return mExperience;
         }
-
-        Mob(int valueOne, int valueTwo, int money, int type, int gearscore, int subType, int experience) {
-            mValueOne = valueOne;
-            mValueTwo = valueTwo;
-            mMoney = money;
-            mType = type;
-            mGearScore = gearscore;
-            mSubType = subType;
-            mExperience = experience;
-        }
     }
 
     static class Item {
         private int mValueOne;
         private int mCost;
         private int mType;
-        private int mGearScore;
-        private int mExperience;
+        private byte mGearScore;
         private int mMobGearScore;
         private byte mDurability;
 
@@ -71,11 +86,8 @@ public final class DataBase {
         public int getType() {
             return mType;
         }
-        public int getGearScore() {
+        public byte getGearScore() {
             return mGearScore;
-        }
-        public int getExperience() {
-            return mExperience;
         }
         public int getMobGearScore() {
             return mMobGearScore;
@@ -84,12 +96,11 @@ public final class DataBase {
             return mDurability;
         }
 
-        Item(int valueOne, int cost, int type, int gearScore, int experience, int mobGearScore, byte durability) {
+        Item(int valueOne, int cost, int type, byte gearScore, int mobGearScore, byte durability) {
             mValueOne = valueOne;
             mCost = cost;
             mType = type;
             mGearScore = gearScore;
-            mExperience = experience;
             mMobGearScore = mobGearScore;
             mDurability = durability;
         }

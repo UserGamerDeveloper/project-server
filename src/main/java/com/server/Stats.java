@@ -17,7 +17,7 @@ import javax.persistence.Table;
 @Table(name="stats")
 class Stats {
     private final static float[] mRequirementExperience = {};
-    private final static byte mGearScorePerStat = 0;
+    private final static byte mGearScorePerStat = 1;
     private final static byte mHPBonus = 1;
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)

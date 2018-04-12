@@ -6,12 +6,13 @@ import javax.persistence.Table;
 @Entity
 @Table(name="hand")
 public class CardHand extends CardPlayer {
-
-    public CardHand(byte idItem, byte slotId) {
-        super(idItem, slotId);
+    public CardHand(byte idItem, byte slotId, byte durability) {
+        super(idItem, slotId, durability);
     }
 
-    public CardHand(byte idItem, byte slotId, byte slotType, byte durability) {
-        super(idItem, slotId, slotType, durability);
+    public CardHand() {
+    }
+    public CardHand(Player player, byte idItem, byte slotId) {
+        super(player, idItem, slotId);
     }
 }

@@ -180,6 +180,7 @@ public class Main {
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
                 Byte[] startItemId = mapper.readValue(request.getData(), Byte[].class);
                 Session session = HibernateUtil.getSessionFactory().openSession();
+                session.beginTransaction();
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
                 Response response = new Response();
@@ -189,6 +190,8 @@ public class Main {
                 else{
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);
                 }
+                session.getTransaction().commit();
+                session.close();
                 String responseString = mapper.writeValueAsString(response);
                 t.sendResponseHeaders(200, responseString.length());
                 OutputStream os = t.getResponseBody();

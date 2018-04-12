@@ -4,11 +4,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -26,6 +31,10 @@ import javax.persistence.Transient;
 @Entity
 @Table(name="player")
 class Player {
+    private static final float GEAR_SCORE_RANGE_RATE = 0.5f;
+    private static final byte CHANCE_HALT = 6;
+    private static final byte CHANCE_VENDOR = 20;
+    private static final byte CHANCE_CHEST = 40;
     private static final byte LOOT_MAX_COUNT = 3;
     private static final byte INVENTORY_MAX_COUNT = 4;
     private static final byte HP_DEFAULT = 30;
@@ -61,25 +70,34 @@ class Player {
     private Byte mCardTable6;
     @Column(name="cardTable7")
     private Byte mCardTable7;
-    @Column(name="cardTable8")
-    private Byte mCardTable8;
     @Column(name="cardTableTargetID")
     private Byte mCardTableTargetID;
     @Column(name="cardTableTargetHP")
     private Byte mCardTableTargetHP;
-    @OneToMany(fetch = FetchType.LAZY, mappedBy="mPlayer")
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @OneToMany(mappedBy="mPlayer", cascade= CascadeType.ALL)
     private List<CardInventory> mInventory =new ArrayList<>();
-    @OneToMany(fetch = FetchType.LAZY, mappedBy="mPlayer")
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @OneToMany(mappedBy="mPlayer", cascade= CascadeType.ALL)
     private List<CardLoot> mLoot =new ArrayList<>();
-    @OneToMany(fetch = FetchType.LAZY, mappedBy="mPlayer")
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @OneToMany(mappedBy="mPlayer", cascade= CascadeType.ALL)
     private List<CardHand> mHands =new ArrayList<>();
     @Column(name="isLogin")
     private boolean mIsLogin;
     @Column(name="loginTime")
     private Timestamp mLoginTime;
-    @OneToOne(fetch = FetchType.LAZY, cascade= CascadeType.ALL)
+    @OneToOne(fetch = FetchType.EAGER, cascade= CascadeType.ALL)
     @JoinColumn(name="idStats", nullable = false)
     private Stats mStats;
+    @Column(name="gearScore")
+    private Integer mGearScore;
+    @Transient
+    private ArrayList<Byte> mGearScoreWeaponOrShieldInInventory = new ArrayList<>();
+    @Transient
+    private short mTopGearScoreWeaponOrShieldInInventory;
+    @Transient
+    private List<DataBase.Mob> mMobList;
 
     Player(String email){
         mEmail = email;
@@ -216,9 +234,6 @@ class Player {
     public Byte getCardTable7() {
         return mCardTable7;
     }
-    public Byte getCardTable8() {
-        return mCardTable8;
-    }
     public Byte getCardTableTargetID() {
         return mCardTableTargetID;
     }
@@ -252,21 +267,75 @@ class Player {
         return resposse;
     }
     String getStartResponce() throws JsonProcessingException {
-
+        mState = State.SELECT_TARGET;
+        mCardTable1 = getCardTable();
+        mCardTable3 = getCardTable();
+        mCardTable4 = getCardTable();
+        mCardTable6 = getCardTable();
         ObjectMapper mapper = new ObjectMapper();
-        String resposse = mapper.writeValueAsString(this);
-        System.out.println("getStartResponce: "+resposse);
-        return resposse;
+        String response = mapper.writeValueAsString(getStartCardTable());
+        System.out.println("getStartResponce: "+response);
+        return response;
+    }
+
+    private short[] getStartCardTable() {
+        short[] startCardTableID = new short[4];
+        startCardTableID[0] = mCardTable1;
+        startCardTableID[1] = mCardTable3;
+        startCardTableID[2] = mCardTable4;
+        startCardTableID[3] = mCardTable6;
+        return startCardTableID;
+    }
+
+    private byte getCardTable() {
+        Random random = new Random();
+        if (random.nextInt(CHANCE_CHEST)==0){
+            return 8;
+        }
+        else{
+            if (random.nextInt(CHANCE_VENDOR)==0){
+                return DataBase.VENDOR_ID.get(random.nextInt(DataBase.VENDOR_ID.size()));
+            }
+            else{
+                if (random.nextInt(CHANCE_HALT)==0){
+                    return 7;
+                }
+                else{
+                    if (mMobList == null){
+                        mMobList = getMobsList();
+                    }
+                    return mMobList.get(random.nextInt(mMobList.size())).getID();
+                }
+            }
+        }
     }
 
     boolean setStartInventory(Byte[] startItemId){
         try{
             if (checkStartInventory(startItemId)){
-                for (byte i = 0; startItemId[i]!=null || i<INVENTORY_MAX_COUNT; i++) {
-                    mInventory.add(new CardInventory(startItemId[i], i));
+                mGearScore = mStats.getGearScoreBonus();
+                mHands.add(new CardHand(this, startItemId[4], (byte)0));
+                mGearScoreWeaponOrShieldInInventory.add(DataBase.ITEMS.get(startItemId[4]).getGearScore());
+                mGearScore += DataBase.ITEMS.get(startItemId[4]).getGearScore();
+                mHands.add(new CardHand(this, startItemId[5], (byte)1));
+                mGearScoreWeaponOrShieldInInventory.add(DataBase.ITEMS.get(startItemId[5]).getGearScore());
+                mGearScore += DataBase.ITEMS.get(startItemId[5]).getGearScore();
+                for (byte i = 0; i<INVENTORY_MAX_COUNT; i++) {
+                    if (startItemId[i]!=null){
+                        mInventory.add(new CardInventory(this, startItemId[i], i));
+                        if (DataBase.ITEMS.get(startItemId[i]).getType()==InventoryType.SHIELD||
+                                DataBase.ITEMS.get(startItemId[i]).getType() == InventoryType.WEAPON)
+                        {
+                            mGearScore += getChangeGearScoreAfterReplace(
+                                    null,
+                                    DataBase.ITEMS.get(startItemId[i]).getGearScore()
+                            );
+                        }
+                    }
+                    else{
+                        break;
+                    }
                 }
-                mHands.add(new CardHand(startItemId[4], (byte)0));
-                mHands.add(new CardHand(startItemId[5], (byte)1));
                 return true;
             }
             else{
@@ -279,14 +348,44 @@ class Player {
         }
     }
 
+    private short getChangeGearScoreAfterReplace(Byte remove, Byte add) {
+        if (remove!=null){
+            mGearScoreWeaponOrShieldInInventory.remove(remove);
+        }
+        if (add!=null){
+            mGearScoreWeaponOrShieldInInventory.add(add);
+        }
+        int listSize = mGearScoreWeaponOrShieldInInventory.size();
+        Byte[] a = new Byte[listSize];
+        mGearScoreWeaponOrShieldInInventory.toArray(a);
+        Arrays.sort(a);
+        for (Byte b:a) {
+            System.out.println("mGearScorelist: "+String.valueOf(b));
+        }
+        short b = (short) (a[listSize-1]+a[listSize-2]-mTopGearScoreWeaponOrShieldInInventory);
+        mTopGearScoreWeaponOrShieldInInventory = (short) (a[listSize-1]+a[listSize-2]);
+        return b;
+    }
+
     private boolean checkStartInventory(Byte[] startItemId){
         short startItemCost = 0;
-        for (byte i = 0; startItemId[i]!=null || i<INVENTORY_MAX_COUNT; i++) {
-            startItemCost += DataBase.ITEMS.get(startItemId[i]).getCost();
+        for (byte i = 0; i<INVENTORY_MAX_COUNT; i++) {
+            if (startItemId[i]!=null){
+                startItemCost += DataBase.ITEMS.get(startItemId[i]).getCost();
+            }
+            else{
+                break;
+            }
         }
         startItemCost += DataBase.ITEMS.get(startItemId[4]).getCost();
         startItemCost += DataBase.ITEMS.get(startItemId[5]).getCost();
-        return startItemCost <= mMoney;
+        if (startItemCost <= mMoneyBank){
+            mMoneyBank -= startItemCost;
+            return true;
+        }
+        else{
+            return false;
+        }
     }
 
     public void setLoginTime(Timestamp loginTime) {
@@ -295,5 +394,13 @@ class Player {
 
     boolean isLoginCooldown(){
         return mLoginTime.before(new Timestamp(mLoginTime.getTime()+LOGIN_COOLDOWN));
+    }
+
+    @JsonIgnore
+    private List<DataBase.Mob> getMobsList() {
+        return DataBase.MOBS.values().stream().filter(
+                mob -> (mob.getGearScore() <= mGearScore) &&
+                        (mob.getGearScore() >= mGearScore*GEAR_SCORE_RANGE_RATE)
+        ).collect(Collectors.toList());
     }
 }
