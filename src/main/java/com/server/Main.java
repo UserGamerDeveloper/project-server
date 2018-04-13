@@ -56,6 +56,7 @@ public class Main {
         HttpServer server = HttpServer.create(new InetSocketAddress(5678), 0);
         server.createContext("/login", new Login());
         server.createContext("/start", new Start());
+        server.createContext("/stats/confirm", new StatsConfirm());
         server.setExecutor(directExecutor);
         server.start();
         System.out.println("Start server");
@@ -83,7 +84,7 @@ public class Main {
         @Override
         public void handle(HttpExchange t) {
             try {
-                System.out.println(System.nanoTime() +" Thread " + Thread.currentThread().getId() + " start Login");
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start Login");
                 ObjectMapper mapper = new ObjectMapper();
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
                 Response response = new Response();
@@ -156,14 +157,8 @@ public class Main {
                             response.setError(ResponceErrorCode.NOT_VERIFIED_EMAIL);
                         }
                 }
-                session.getTransaction().commit();
-                session.close();
-                String responseString = mapper.writeValueAsString(response);
-                t.sendResponseHeaders(200, responseString.length());
-                OutputStream os = t.getResponseBody();
-                os.write(responseString.getBytes());
-                os.close();
-                System.out.println(System.nanoTime() +" Thread " + Thread.currentThread().getId() + " stop");
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop");
             }
             catch (Exception e){
                 e.printStackTrace();
@@ -175,7 +170,7 @@ public class Main {
         @Override
         public void handle(HttpExchange t) {
             try {
-                System.out.println(System.nanoTime() +" Thread " + Thread.currentThread().getId() + " start Start");
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start Start");
                 ObjectMapper mapper = new ObjectMapper();
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
                 Byte[] startItemId = mapper.readValue(request.getData(), Byte[].class);
@@ -190,19 +185,52 @@ public class Main {
                 else{
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);
                 }
-                session.getTransaction().commit();
-                session.close();
-                String responseString = mapper.writeValueAsString(response);
-                t.sendResponseHeaders(200, responseString.length());
-                OutputStream os = t.getResponseBody();
-                os.write(responseString.getBytes());
-                os.close();
-                System.out.println(System.nanoTime() +" Thread " + Thread.currentThread().getId() + " stop Start");
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop Start");
             }
             catch (Exception e){
                 e.printStackTrace();
             }
         }
+    }
+
+    static class StatsConfirm implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(
+                        new Date() + " Thread " + Thread.currentThread().getId() + " start stats/confirm"
+                );
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                Stats.Request data = mapper.readValue(request.getData(), Stats.Request.class);
+                Session session = HibernateUtil.getSessionFactory().openSession();
+                session.beginTransaction();
+                SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
+                Player player = session.load(Player.class, sessionInfo.getIdPlayer());
+                Response response = new Response();
+                if (!player.getStats().confirm(data)){
+                    response.setError(ResponceErrorCode.CHEAT_OR_BUG);
+                }
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(
+                        new Date() +" Thread " + Thread.currentThread().getId() + " stop stats/confirm"
+                );
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void commitTransactionAndSendResponse(HttpExchange t, ObjectMapper mapper, Session session, Response response) throws IOException {
+        session.getTransaction().commit();
+        session.close();
+        String responseString = mapper.writeValueAsString(response);
+        t.sendResponseHeaders(200, responseString.length());
+        OutputStream os = t.getResponseBody();
+        os.write(responseString.getBytes());
+        os.close();
     }
 
     private static String getRequestBody(HttpExchange t) throws IOException {
@@ -218,24 +246,3 @@ public class Main {
         return request;
     }
 }
-/*
-            URL url;
-            try {
-
-                url = new URL(
-                        "https://api.bitfinex.com/v1/book/BTCUSD/?limit_bids="+ request + "&limit_asks="+ request
-                );
-                HttpsURLConnection con = (HttpsURLConnection)url.openConnection();
-
-                inputStream = con.getInputStream();
-                result = new ByteArrayOutputStream();
-                while ((length = inputStream.read(buffer)) != -1) {
-                    result.write(buffer, 0, length);
-                }
-                request = result.toString("UTF-8");
-                System.out.println("HTTPS response: " + request);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-*/

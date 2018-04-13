@@ -16,6 +16,33 @@ import javax.persistence.Table;
 @Entity
 @Table(name="stats")
 class Stats {
+
+    static class Request {
+        private byte mDamagePoints;
+        private byte mDefencePoints;
+        private byte mHPPoints;
+
+        public byte getDamagePoints() {
+            return mDamagePoints;
+        }
+        public byte getDefencePoints() {
+            return mDefencePoints;
+        }
+        public byte getHPPoints() {
+            return mHPPoints;
+        }
+
+        public void setDamagePoints(byte damagePoints) {
+            mDamagePoints = damagePoints;
+        }
+        public void setDefencePoints(byte defencePoints) {
+            mDefencePoints = defencePoints;
+        }
+        public void setHPPoints(byte HPPoints) {
+            mHPPoints = HPPoints;
+        }
+    }
+
     private final static float[] mRequirementExperience = {};
     private final static byte mGearScorePerStat = 1;
     private final static byte mHPBonus = 1;
@@ -89,6 +116,33 @@ class Stats {
     void addHPPoint() {
         mHPPoints++;
         mPoints--;
+    }
+
+    boolean confirm(Request request) {
+        if (mDamagePoints > request.getDamagePoints()){
+            return false;
+        }
+        byte points = 0;
+        points += request.getDamagePoints()-mDamagePoints;
+        if (mDefencePoints > request.getDefencePoints()){
+            return false;
+        }
+        points += request.getDefencePoints()-mDefencePoints;
+        if (mHPPoints > request.getHPPoints()){
+            return false;
+        }
+        points += request.getHPPoints()-mHPPoints;
+        if (mPoints>=points)
+        {
+            mDamagePoints = request.getDamagePoints();
+            mDefencePoints = request.getDefencePoints();
+            mHPPoints = request.getHPPoints();
+            mPoints -= points;
+            return true;
+        }
+        else{
+            return false;
+        }
     }
 
     void reset() {
