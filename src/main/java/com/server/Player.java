@@ -278,6 +278,10 @@ class Player {
         return response;
     }
 
+    void changeMoneyBank(int delta){
+        mMoneyBank += delta;
+    }
+
     private short[] getStartCardTable() {
         short[] startCardTableID = new short[4];
         startCardTableID[0] = mCardTable1;

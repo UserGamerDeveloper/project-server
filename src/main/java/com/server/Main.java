@@ -57,6 +57,7 @@ public class Main {
         server.createContext("/login", new Login());
         server.createContext("/start", new Start());
         server.createContext("/stats/confirm", new StatsConfirm());
+        server.createContext("/stats/reset", new StatsReset());
         server.setExecutor(directExecutor);
         server.start();
         System.out.println("Start server");
@@ -215,6 +216,34 @@ public class Main {
                 commitTransactionAndSendResponse(t, mapper, session, response);
                 System.out.println(
                         new Date() +" Thread " + Thread.currentThread().getId() + " stop stats/confirm"
+                );
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class StatsReset implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(
+                        new Date() + " Thread " + Thread.currentThread().getId() + " start stats/reset"
+                );
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                Session session = HibernateUtil.getSessionFactory().openSession();
+                session.beginTransaction();
+                SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
+                Player player = session.load(Player.class, sessionInfo.getIdPlayer());
+                Response response = new Response();
+                if (!player.getStats().reset()){
+                    response.setError(ResponceErrorCode.CHEAT_OR_BUG);
+                }
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(
+                        new Date() +" Thread " + Thread.currentThread().getId() + " stop stats/reset"
                 );
             }
             catch (Exception e){

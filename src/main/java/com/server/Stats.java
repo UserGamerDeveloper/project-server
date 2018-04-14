@@ -1,15 +1,10 @@
 package com.server;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -43,9 +38,10 @@ class Stats {
         }
     }
 
-    private final static float[] mRequirementExperience = {};
-    private final static byte mGearScorePerStat = 1;
-    private final static byte mHPBonus = 1;
+    private final static float[] REQUIREMENT_EXPERIENCE = {};
+    private final static byte GEAR_SCORE_PER_STAT = 1;
+    private final static byte HP_BONUS_PER_STAT = 1;
+    private final static short RESET_COST = 1;
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     @Column(name="id")
@@ -62,6 +58,8 @@ class Stats {
     private byte mHPPoints;
     @Column(name="points")
     private byte mPoints;
+    @OneToOne(mappedBy = "mStats")
+    private Player mPlayer;
 
     Stats() {
         mLevel = 0;
@@ -90,14 +88,11 @@ class Stats {
     public byte getPoints() {
         return mPoints;
     }
-    void setPoints(byte points) {
-        mPoints = points;
-    }
 
     void addExperience(int experience) {
         mExperienceValue += experience;
-        if (mExperienceValue >= mRequirementExperience[mLevel]) {
-            mExperienceValue -= mRequirementExperience[mLevel];
+        if (mExperienceValue >= REQUIREMENT_EXPERIENCE[mLevel]) {
+            mExperienceValue -= REQUIREMENT_EXPERIENCE[mLevel];
             mLevel++;
             mPoints++;
         }
@@ -145,15 +140,22 @@ class Stats {
         }
     }
 
-    void reset() {
-        setPoints(mLevel);
-        mDamagePoints = 0;
-        mDefencePoints = 0;
-        mHPPoints = 0;
+    boolean reset() {
+        if (mPlayer.getMoneyBank()>=RESET_COST){
+            mPlayer.changeMoneyBank(-RESET_COST);
+            mPoints = mLevel;
+            mDamagePoints = 0;
+            mDefencePoints = 0;
+            mHPPoints = 0;
+            return true;
+        }
+        else{
+            return false;
+        }
     }
 
     int getGearScoreBonus() {
-        return (mHPPoints + mDamagePoints + mDefencePoints) * mGearScorePerStat;
+        return (mHPPoints + mDamagePoints + mDefencePoints) * GEAR_SCORE_PER_STAT;
     }
 
     int getDamageBonus() {
@@ -165,6 +167,6 @@ class Stats {
     }
 
     int getHPBonus() {
-        return mHPPoints * mHPBonus;
+        return mHPPoints * HP_BONUS_PER_STAT;
     }
 }
