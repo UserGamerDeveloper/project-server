@@ -282,6 +282,37 @@ class Player {
         mMoneyBank += delta;
     }
 
+    boolean setTarget(byte id){
+        if (mState == State.SELECT_TARGET){
+            switch (id){
+                case 1:{
+                    mCardTableTargetID = mCardTable1;
+                    break;
+                }
+                case 3:{
+                    mCardTableTargetID = mCardTable3;
+                    break;
+                }
+                case 4:{
+                    mCardTableTargetID = mCardTable4;
+                    break;
+                }
+                case 6:{
+                    mCardTableTargetID = mCardTable6;
+                    break;
+                }
+                default:{
+                    return false;
+                }
+            }
+            mCardTableTargetHP = DataBase.MOBS.get(mCardTableTargetID).getValueTwo();
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
     private short[] getStartCardTable() {
         short[] startCardTableID = new short[4];
         startCardTableID[0] = mCardTable1;
@@ -293,25 +324,59 @@ class Player {
 
     private byte getCardTable() {
         Random random = new Random();
-        if (random.nextInt(CHANCE_CHEST)==0){
-            return 8;
-        }
-        else{
-            if (random.nextInt(CHANCE_VENDOR)==0){
-                return DataBase.VENDOR_ID.get(random.nextInt(DataBase.VENDOR_ID.size()));
-            }
-            else{
-                if (random.nextInt(CHANCE_HALT)==0){
+        boolean chest = random.nextInt(CHANCE_CHEST)==0;
+        boolean vendor = random.nextInt(CHANCE_VENDOR)==0;
+        boolean halt = random.nextInt(CHANCE_HALT)==0;
+        if(chest && vendor && halt) {
+            switch (random.nextInt(3)){
+                case 0:{
+                    return 8;
+                }
+                case 1:{
+                    return DataBase.VENDOR_ID.get(random.nextInt(DataBase.VENDOR_ID.size()));
+                }
+                case 3:{
                     return 7;
                 }
-                else{
-                    if (mMobList == null){
-                        mMobList = getMobsList();
-                    }
-                    return mMobList.get(random.nextInt(mMobList.size())).getID();
-                }
             }
         }
+        if(chest&&!vendor&&!halt){
+            return 8;
+        }
+        if(!chest&&vendor&&!halt){
+            return DataBase.VENDOR_ID.get(random.nextInt(DataBase.VENDOR_ID.size()));
+        }
+        if(!chest && !vendor && halt){
+            return 7;
+        }
+        if(chest && vendor){
+            if (random.nextBoolean()){
+                return 8;
+            }
+            else {
+                return DataBase.VENDOR_ID.get(random.nextInt(DataBase.VENDOR_ID.size()));
+            }
+        }
+        if(halt && vendor){
+            if (random.nextBoolean()){
+                return 7;
+            }
+            else {
+                return DataBase.VENDOR_ID.get(random.nextInt(DataBase.VENDOR_ID.size()));
+            }
+        }
+        if(halt && chest){
+            if (random.nextBoolean()){
+                return 7;
+            }
+            else {
+                return 8;
+            }
+        }
+        if (mMobList == null){
+            mMobList = getMobsList();
+        }
+        return mMobList.get(random.nextInt(mMobList.size())).getID();
     }
 
     boolean setStartInventory(Byte[] startItemId){
