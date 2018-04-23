@@ -113,8 +113,7 @@ class Player {
         mIsLogin = true;
         mStats = new Stats();
     }
-    public Player() {
-    }
+    public Player() {}
 
     String getLoginResponse() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
