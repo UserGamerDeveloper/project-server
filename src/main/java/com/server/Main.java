@@ -28,11 +28,6 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import org.hibernate.Session;
 
 public class Main {
-
-/*
-    final static Hashtable<String, Player> sTokenPlayerHashtable = new Hashtable<>();
-    final static Hashtable<String, String> sEmailTokenHashtable = new Hashtable<>();
-*/
     final static ExecutorService threadPool = Executors.newFixedThreadPool(4);
 /*
     final static ScheduledExecutorService SCHEDULED_EXECUTOR_SERVICE = Executors.newSingleThreadScheduledExecutor();
@@ -57,6 +52,9 @@ public class Main {
         server.createContext("/login", new Login());
         server.createContext("/start", new Start());
         server.createContext("/target", new SetTarget());
+        server.createContext("/damage", new Damage());
+        server.createContext("/use/spell", new UseSpell());
+        server.createContext("/use/food", new UseFood());
         server.createContext("/stats/confirm", new StatsConfirm());
         server.createContext("/stats/reset", new StatsReset());
         server.setExecutor(directExecutor);
@@ -124,7 +122,7 @@ public class Main {
                             session.save(sessionInfo);
                             player.setLoginTime(new Timestamp(new Date().getTime()));
                             session.save(player);
-                            response.setData(player.getLoginResponce());
+                            response.setData(player.getLoginResponse());
                         }
                         else{
                             player.setLogin(false);
@@ -139,7 +137,7 @@ public class Main {
                             player.setLogin(true);
                             player.setLoginTime(new Timestamp(new Date().getTime()));
                             session.save(player);
-                            response.setData(player.getLoginResponce());
+                            response.setData(player.getLoginResponse());
                         }
                         else{
                             response.setError(ResponceErrorCode.LOGIN_COOLDOWN);
@@ -153,7 +151,7 @@ public class Main {
                             session.flush();
                             SessionInfo sessionInfo = new SessionInfo(player.getID(),request.getKey());
                             session.save(sessionInfo);
-                            response.setData(player.getLoginResponce());
+                            response.setData(player.getLoginResponse());
                         }
                         else {
                             response.setError(ResponceErrorCode.NOT_VERIFIED_EMAIL);
@@ -182,7 +180,7 @@ public class Main {
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
                 Response response = new Response();
                 if (player.setStartInventory(startItemId)){
-                    response.setData(player.getStartResponce());
+                    response.setData(player.getStartResponse());
                 }
                 else{
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);
@@ -218,6 +216,87 @@ public class Main {
                 System.out.println(
                         new Date() +" Thread " + Thread.currentThread().getId() + " stop SetTarget"
                 );
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class Damage implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start Damage");
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                byte[] handsId = mapper.readValue(request.getData(), byte[].class);
+                Session session = HibernateUtil.getSessionFactory().openSession();
+                session.beginTransaction();
+                SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
+                Player player = session.load(Player.class, sessionInfo.getIdPlayer());
+                Response response = new Response();
+                if (player.damage(handsId)){
+                    response.setData(player.getDamageResponse());
+                }
+                else{
+                    response.setError(ResponceErrorCode.CHEAT_OR_BUG);
+                }
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop Damage");
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class UseSpell implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start UseSpell");
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                byte itemID = mapper.readValue(request.getData(), byte.class);
+                Session session = HibernateUtil.getSessionFactory().openSession();
+                session.beginTransaction();
+                SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
+                Player player = session.load(Player.class, sessionInfo.getIdPlayer());
+                Response response = new Response();
+                if (player.useSpell(itemID)){
+                    response.setData(player.getDamageResponse());
+                }
+                else{
+                    response.setError(ResponceErrorCode.CHEAT_OR_BUG);
+                }
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop UseSpell");
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class UseFood implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start UseFood");
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                byte itemID = mapper.readValue(request.getData(), byte.class);
+                Session session = HibernateUtil.getSessionFactory().openSession();
+                session.beginTransaction();
+                SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
+                Player player = session.load(Player.class, sessionInfo.getIdPlayer());
+                Response response = new Response();
+                if (!player.useFood(itemID)){
+                    response.setError(ResponceErrorCode.CHEAT_OR_BUG);
+                }
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop UseFood");
             }
             catch (Exception e){
                 e.printStackTrace();

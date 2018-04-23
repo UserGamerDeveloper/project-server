@@ -38,7 +38,8 @@ class Stats {
         }
     }
 
-    private final static float[] REQUIREMENT_EXPERIENCE = {};
+    private final static float[] REQUIREMENT_EXPERIENCE = {10, 20, 30, 1000, 1000, 1000, 1000,
+            1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
     private final static byte GEAR_SCORE_PER_STAT = 1;
     private final static byte HP_BONUS_PER_STAT = 1;
     private final static short RESET_COST = 1;
@@ -114,44 +115,44 @@ class Stats {
     }
 
     boolean confirm(Request request) {
-        if (mDamagePoints > request.getDamagePoints()){
-            return false;
+        if (mPlayer.getState()==State.NONE){
+            if (mDamagePoints > request.getDamagePoints()){
+                return false;
+            }
+            byte points = 0;
+            points += request.getDamagePoints()-mDamagePoints;
+            if (mDefencePoints > request.getDefencePoints()){
+                return false;
+            }
+            points += request.getDefencePoints()-mDefencePoints;
+            if (mHPPoints > request.getHPPoints()){
+                return false;
+            }
+            points += request.getHPPoints()-mHPPoints;
+            if (mPoints>=points)
+            {
+                mDamagePoints = request.getDamagePoints();
+                mDefencePoints = request.getDefencePoints();
+                mHPPoints = request.getHPPoints();
+                mPoints -= points;
+                return true;
+            }
         }
-        byte points = 0;
-        points += request.getDamagePoints()-mDamagePoints;
-        if (mDefencePoints > request.getDefencePoints()){
-            return false;
-        }
-        points += request.getDefencePoints()-mDefencePoints;
-        if (mHPPoints > request.getHPPoints()){
-            return false;
-        }
-        points += request.getHPPoints()-mHPPoints;
-        if (mPoints>=points)
-        {
-            mDamagePoints = request.getDamagePoints();
-            mDefencePoints = request.getDefencePoints();
-            mHPPoints = request.getHPPoints();
-            mPoints -= points;
-            return true;
-        }
-        else{
-            return false;
-        }
+        return false;
     }
 
     boolean reset() {
-        if (mPlayer.getMoneyBank()>=RESET_COST){
-            mPlayer.changeMoneyBank(-RESET_COST);
-            mPoints = mLevel;
-            mDamagePoints = 0;
-            mDefencePoints = 0;
-            mHPPoints = 0;
-            return true;
+        if (mPlayer.getState()!=State.NONE){
+            if (mPlayer.getMoneyBank()>=RESET_COST){
+                mPlayer.changeMoneyBank(-RESET_COST);
+                mPoints = mLevel;
+                mDamagePoints = 0;
+                mDefencePoints = 0;
+                mHPPoints = 0;
+                return true;
+            }
         }
-        else{
-            return false;
-        }
+        return false;
     }
 
     int getGearScoreBonus() {

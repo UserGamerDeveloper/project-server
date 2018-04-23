@@ -1,5 +1,9 @@
 package com.server;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import java.util.Random;
+
 import javax.persistence.Column;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -29,18 +33,30 @@ abstract class CardPlayer {
         mPlayer = player;
         mIdItem = idItem;
         mSlotId = slotId;
-        mDurability = DataBase.ITEMS.get(idItem).getDurability();
+        DataBase.Item item = DataBase.ITEMS.get(idItem);
+        if (item.getType()==InventoryType.SHIELD ||
+                item.getType()==InventoryType.WEAPON){
+            Random random = new Random();
+            mDurability = (byte) ((byte) random.nextInt(DataBase.ITEMS.get(idItem).getDurability())+1);
+        }
     }
-    public CardPlayer(byte idItem, byte slotId, byte durability) {
+    public CardPlayer(Player player, byte idItem, byte slotId, byte durability) {
+        mPlayer = player;
         mIdItem = idItem;
         mSlotId = slotId;
         mDurability = durability;
     }
-    public CardPlayer() {
-    }
+    public CardPlayer() {}
 
     void copy(CardPlayer card){
         this.mDurability = card.getDurability();
+    }
+
+    void decrementDurability(){
+        mDurability--;
+        if (mDurability<1){
+            mIdItem = 0;
+        }
     }
 
     public byte getSlotId() {
@@ -52,7 +68,16 @@ abstract class CardPlayer {
     public byte getDurability(){
         return mDurability;
     }
+    @JsonIgnore
+    public Player getPlayer() {
+        return mPlayer;
+    }
     void setDurability(byte durability){
         this.mDurability = durability;
+    }
+
+    @Override
+    public String toString() {
+        return mPlayer.getID()+" "+mSlotId+" "+mIdItem+" "+mDurability;
     }
 }

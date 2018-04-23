@@ -4,13 +4,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.hibernate.Session;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
-import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -27,6 +29,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.xml.crypto.Data;
 
 @Entity
 @Table(name="player")
@@ -35,8 +38,11 @@ class Player {
     private static final byte CHANCE_HALT = 6;
     private static final byte CHANCE_VENDOR = 20;
     private static final byte CHANCE_CHEST = 40;
+    private static final byte CHANCE_FOOD = 3;
+    private static final byte CHANCE_SPELL = 10;
+    private static final byte CHANCE_WEAPON_OE_SHIELD = 5;
     private static final byte LOOT_MAX_COUNT = 3;
-    private static final byte INVENTORY_MAX_COUNT = 4;
+    private static final byte INVENTORY_MAX_COUNT = 6;
     private static final byte HP_DEFAULT = 30;
     private static final byte CARD_TABLE_MAX_COUNT = 8;
     private static final long LOGIN_COOLDOWN = 60000L;
@@ -70,19 +76,18 @@ class Player {
     private Byte mCardTable6;
     @Column(name="cardTable7")
     private Byte mCardTable7;
+    @Column(name="cardTableTargetIDInArray")
+    private Byte mCardTableTargetIDInArray;
     @Column(name="cardTableTargetID")
     private Byte mCardTableTargetID;
     @Column(name="cardTableTargetHP")
     private Byte mCardTableTargetHP;
     @LazyCollection(LazyCollectionOption.FALSE)
-    @OneToMany(mappedBy="mPlayer", cascade= CascadeType.ALL)
+    @OneToMany(mappedBy="mPlayer", orphanRemoval = true, cascade= CascadeType.ALL)
     private List<CardInventory> mInventory =new ArrayList<>();
     @LazyCollection(LazyCollectionOption.FALSE)
-    @OneToMany(mappedBy="mPlayer", cascade= CascadeType.ALL)
+    @OneToMany(mappedBy="mPlayer", orphanRemoval = true, cascade= CascadeType.ALL)
     private List<CardLoot> mLoot =new ArrayList<>();
-    @LazyCollection(LazyCollectionOption.FALSE)
-    @OneToMany(mappedBy="mPlayer", cascade= CascadeType.ALL)
-    private List<CardHand> mHands =new ArrayList<>();
     @Column(name="isLogin")
     private boolean mIsLogin;
     @Column(name="loginTime")
@@ -108,174 +113,101 @@ class Player {
         mIsLogin = true;
         mStats = new Stats();
     }
-    Player(ResultSet playerResultSet) {
-
-/*
-        try {
-            mID = playerResultSet.getInt(1);
-            mMoneyBank = playerResultSet.getInt(3);
-            mState = playerResultSet.getByte(5);
-            if (mState != State.NONE) {
-                mMoney = playerResultSet.getInt(4);
-                mHP = playerResultSet.getByte(6);
-                mInventory = new CardPlayer[INVENTORY_MAX_COUNT];
-                mCardTable = new byte[CARD_TABLE_MAX_COUNT];
-                Connection con = DataBaseUtil.getConnection();
-                PreparedStatement preparedStatement = con.prepareStatement(
-                        "SELECT * FROM player WHERE playerInventory=?"
-                );
-                preparedStatement.setString(1, String.valueOf(mID));
-                ResultSet inventoryResultSet = preparedStatement.executeQuery();
-                if(mState != State.SELECT_LOOT){
-                    mLoot = new CardPlayer[LOOT_MAX_COUNT];
-                    mLootCount = 0;
-                }
-                if(inventoryResultSet.first()){
-                    do {
-                        switch (inventoryResultSet.getByte(3)){
-                            case SlotType.HAND:{
-                                if (mHandOne!=null){
-                                    mHandOne = new CardPlayer(
-                                            inventoryResultSet.getByte(4),
-                                            (byte) 0,
-                                            SlotType.HAND,
-                                            inventoryResultSet.getByte(5)
-                                    );
-                                }
-                                else{
-                                    mHandTwo = new CardPlayer(
-                                            inventoryResultSet.getByte(4),
-                                            (byte) 0,
-                                            SlotType.HAND,
-                                            inventoryResultSet.getByte(5)
-                                    );
-                                }
-                                break;
-                            }
-                            case SlotType.INVENTORY:{
-                                mInventory[inventoryResultSet.getByte(2)] = new CardPlayer(
-                                        inventoryResultSet.getByte(4),
-                                        mInventoryItemCount,
-                                        SlotType.INVENTORY,
-                                        inventoryResultSet.getByte(5)
-                                );
-                                mInventoryItemCount++;
-                                break;
-                            }
-                            case SlotType.LOOT:{
-                                mLoot[mLootCount] = new CardPlayer(
-                                        inventoryResultSet.getByte(4),
-                                        mLootCount,
-                                        SlotType.LOOT,
-                                        inventoryResultSet.getByte(5)
-                                );
-                                mLootCount++;
-                                break;
-                            }
-                        }
-                    } while(inventoryResultSet.next());
-                }
-                for (byte i = 7;i<16;i++){
-                    mCardTable[i-7] = inventoryResultSet.getByte(i);
-                }
-                if (mState==State.COMBAT){
-                    mCardTableTargetHP = inventoryResultSet.getByte(16);
-                }
-            }
-            System.out.printf("mMoneyBank: %d\n", mMoneyBank);
-            System.out.printf("mMoney: %d\n", mMoney);
-            System.out.printf("mState: %d\n", mState);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-*/
-    }
     public Player() {
     }
 
-    @JsonIgnore
-    public int getID() {
-        return mID;
-    }
-    public byte getHP() {
-        return mHP;
-    }
-    public byte getState() {
-        return mState;
-    }
-    public int getMoney() {
-        return mMoney;
-    }
-    public int getMoneyBank() {
-        return mMoneyBank;
-    }
-    public Byte getCardTable0() {
-        return mCardTable0;
-    }
-    public Byte getCardTable1() {
-        return mCardTable1;
-    }
-    public Byte getCardTable2() {
-        return mCardTable2;
-    }
-    public Byte getCardTable3() {
-        return mCardTable3;
-    }
-    public Byte getCardTable4() {
-        return mCardTable4;
-    }
-    public Byte getCardTable5() {
-        return mCardTable5;
-    }
-    public Byte getCardTable6() {
-        return mCardTable6;
-    }
-    public Byte getCardTable7() {
-        return mCardTable7;
-    }
-    public Byte getCardTableTargetID() {
-        return mCardTableTargetID;
-    }
-    public Byte getCardTableTargetHP() {
-        return mCardTableTargetHP;
-    }
-    public List<CardInventory> getInventory() {
-        return mInventory;
-    }
-    public List<CardLoot> getLoot() {
-        return mLoot;
-    }
-    public List<CardHand> getHands() {
-        return mHands;
-    }
-    public Stats getStats() {
-        return mStats;
-    }
-    @JsonIgnore
-    public boolean isLogin() {
-        return mIsLogin;
-    }
-    public void setLogin(boolean login) {
-        mIsLogin = login;
-    }
-
-    String getLoginResponce() throws JsonProcessingException {
+    String getLoginResponse() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         String resposse = mapper.writeValueAsString(this);
-        System.out.println("getLoginResponce: "+resposse);
+        System.out.println("getLoginResponse: "+resposse);
         return resposse;
     }
-    String getStartResponce() throws JsonProcessingException {
+    String getStartResponse() throws JsonProcessingException {
         mState = State.SELECT_TARGET;
         mCardTable1 = getCardTable();
         mCardTable3 = getCardTable();
         mCardTable4 = getCardTable();
         mCardTable6 = getCardTable();
+        mHP = (byte) (HP_DEFAULT + mStats.getHPBonus());
         ObjectMapper mapper = new ObjectMapper();
         String response = mapper.writeValueAsString(getStartCardTable());
-        System.out.println("getStartResponce: "+response);
+        System.out.println("getStartResponse: "+response);
         return response;
+    }
+    String getDamageResponse() throws JsonProcessingException {
+        String resonceStr = null;
+        if (mState==State.SELECT_LOOT){
+            ObjectMapper mapper = new ObjectMapper();
+            DamageResponse response = new DamageResponse();
+            response.setLoot(mapper.writeValueAsString(mLoot));
+            tryPickingLoot();
+            if (mLoot.isEmpty()) {
+                mState = State.SELECT_TARGET;
+                if (mCardTableTargetIDInArray==1){
+                    mCardTable5 = mCardTable3;
+                    mCardTable7 = mCardTable4;
+                    mCardTable3 = mCardTable0!=null ? mCardTable0 : getCardTable();
+                    mCardTable4 = mCardTable2!=null ? mCardTable2 : getCardTable();
+                    mCardTable0 = null;
+                    mCardTable2 = null;
+                    mCardTable1 = getCardTable();
+                    mCardTable6 = getCardTable();
+                }
+                if (mCardTableTargetIDInArray==3){
+                    mCardTable7 = mCardTable6;
+                    mCardTable2 = mCardTable1;
+                    mCardTable6 = mCardTable5!=null ? mCardTable5 : getCardTable();
+                    mCardTable1 = mCardTable0!=null ? mCardTable0 : getCardTable();
+                    mCardTable5 = null;
+                    mCardTable0 = null;
+                    mCardTable3 = getCardTable();
+                    mCardTable4 = getCardTable();
+                }
+                if (mCardTableTargetIDInArray==4){
+                    mCardTable5 = mCardTable6;
+                    mCardTable0 = mCardTable1;
+                    mCardTable6 = mCardTable7!=null ? mCardTable7 : getCardTable();
+                    mCardTable1 = mCardTable2!=null ? mCardTable2 : getCardTable();
+                    mCardTable7 = null;
+                    mCardTable2 = null;
+                    mCardTable3 = getCardTable();
+                    mCardTable4 = getCardTable();
+                }
+                if (mCardTableTargetIDInArray==6){
+                    mCardTable0 = mCardTable3;
+                    mCardTable2 = mCardTable4;
+                    mCardTable3 = mCardTable5!=null ? mCardTable5 : getCardTable();
+                    mCardTable4 = mCardTable7!=null ? mCardTable7 : getCardTable();
+                    mCardTable5 = null;
+                    mCardTable7 = null;
+                    mCardTable1 = getCardTable();
+                    mCardTable6 = getCardTable();
+                }
+                response.setCardTableID(getStartCardTable());
+                mCardTableTargetIDInArray = null;
+            }
+            resonceStr = mapper.writeValueAsString(response);
+        }
+        System.out.println("getDamageResponse: "+resonceStr);
+        return resonceStr;
+    }
+    private void tryPickingLoot() {
+        while (!mLoot.isEmpty() && mInventory.size() < INVENTORY_MAX_COUNT) {
+            DataBase.Item item = DataBase.ITEMS.get(mLoot.get(0).getIdItem());
+            if (item.getType()== InventoryType.WEAPON ||
+                    item.getType()== InventoryType.SHIELD)
+            {
+                mGearScore += getChangeGearScoreAfterReplace(
+                        null,
+                        item.getGearScore()
+                );
+            }
+            else{
+                mGearScore += item.getGearScore();
+            }
+            mInventory.add(new CardInventory(mLoot.get(0)));
+            mLoot.remove(0);
+        }
     }
 
     void changeMoneyBank(int delta){
@@ -286,18 +218,22 @@ class Player {
         if (mState == State.SELECT_TARGET){
             switch (id){
                 case 1:{
+                    mCardTableTargetIDInArray = 1;
                     mCardTableTargetID = mCardTable1;
                     break;
                 }
                 case 3:{
+                    mCardTableTargetIDInArray = 3;
                     mCardTableTargetID = mCardTable3;
                     break;
                 }
                 case 4:{
+                    mCardTableTargetIDInArray = 4;
                     mCardTableTargetID = mCardTable4;
                     break;
                 }
                 case 6:{
+                    mCardTableTargetIDInArray = 6;
                     mCardTableTargetID = mCardTable6;
                     break;
                 }
@@ -306,11 +242,176 @@ class Player {
                 }
             }
             mCardTableTargetHP = DataBase.MOBS.get(mCardTableTargetID).getValueTwo();
+            mState = State.COMBAT;
             return true;
         }
         else {
             return false;
         }
+    }
+
+    boolean damage(byte[] handsId){
+        if (mState == State.COMBAT){
+            DataBase.Item handOne = DataBase.ITEMS.get(handsId[0]);
+            DataBase.Item handTwo = DataBase.ITEMS.get(handsId[1]);
+            if ((handOne.getType()==InventoryType.WEAPON || handOne.getType()==InventoryType.SHIELD) &&
+                    (handTwo.getType()==InventoryType.WEAPON || handTwo.getType()==InventoryType.SHIELD))
+            {
+                List<CardInventory> handOneState = mInventory.stream().filter(
+                        item -> item.getIdItem() == handsId[0]
+                ).collect(Collectors.toList());
+                if (!handOneState.isEmpty()){
+                    List<CardInventory> handTwoState = mInventory.stream().filter(
+                            item -> (item.getIdItem() == handsId[1]) && (handOneState.get(0)!=item)
+                    ).collect(Collectors.toList());
+                    if (!handTwoState.isEmpty()){
+                        DataBase.Mob mobTarget = DataBase.MOBS.get(mCardTableTargetID);
+                        int mobDamage = mobTarget.getValueOne();
+                        if(mobDamage > 0 && handOne.getType() == InventoryType.SHIELD){
+                            if (handOne.getValueOne() < mobDamage){
+                                mobDamage -= handOne.getValueOne() + mStats.getDefenceBonus();
+                            }
+                            else{
+                                mobDamage = 0;
+                            }
+                        }
+                        if(mobDamage > 0 && handTwo.getType() == InventoryType.SHIELD){
+                            if (handTwo.getValueOne() < mobDamage){
+                                mobDamage -= handTwo.getValueOne() + mStats.getDefenceBonus();
+                            }
+                            else{
+                                mobDamage = 0;
+                            }
+                        }
+                        if (mobDamage>0){
+                            mHP -= mobDamage;
+                        }
+                        if (mHP < 1) {
+                            mState = State.NONE;
+                            mHP = 0;
+                            mMoneyBank += mMoney;
+                            mMoney = 0;
+                            mInventory.clear();
+                            System.out.println("mInventory.isEmpty()" + mInventory.isEmpty());
+                            return true;
+                        }
+
+                        byte damage = (byte) ((handOne.getType() == InventoryType.WEAPON ?
+                                handOne.getValueOne()+mStats.getDamageBonus() : 0) +
+                                (handTwo.getType() == InventoryType.WEAPON ?
+                                handTwo.getValueOne()+mStats.getDamageBonus() : 0));
+                        mCardTableTargetHP = (byte)(mCardTableTargetHP-damage);
+
+                        if (handOneState.get(0).getIdItem()!=0){
+                            handOneState.get(0).decrementDurability();
+                        }
+                        if (handTwoState.get(0).getIdItem()!=0){
+                            handTwoState.get(0).decrementDurability();
+                        }
+
+                        if (mCardTableTargetHP<1){
+                            deadMob(mobTarget);
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    private void deadMob(DataBase.Mob mobTarget) {
+        mState = State.SELECT_LOOT;
+        mMoney += mobTarget.getMoney();
+        mStats.addExperience(mobTarget.getExperience());
+        generateLoot();
+    }
+    private void generateLoot() {
+        int[] typeLoot = new int[3];
+        DataBase.Mob mob = DataBase.MOBS.get(mCardTableTargetID);
+        mCardTableTargetID = null;
+        mCardTableTargetHP = null;
+        Random random = new Random();
+        int lootCount = 0;
+        if (mob.getType()==CardTableType.MOB){
+            if (mob.getSubType()!=CardTableSubType.FOREST){
+                if (random.nextInt(CHANCE_WEAPON_OE_SHIELD)==0){
+                    if (random.nextBoolean()){
+                        typeLoot[lootCount]=InventoryType.WEAPON;
+                    }
+                    else{
+                        typeLoot[lootCount]=InventoryType.SHIELD;
+                    }
+                    lootCount++;
+                }
+                if (random.nextInt(CHANCE_FOOD)==0){
+                    typeLoot[lootCount]= InventoryType.FOOD;
+                    lootCount++;
+                }
+                if (random.nextInt(CHANCE_SPELL)==0){
+                    typeLoot[lootCount]= InventoryType.SPELL;
+                    lootCount++;
+                }
+            }
+        }
+        else{
+            lootCount = random.nextInt(3)+1;
+            for (byte i = 0; i < lootCount; i++){
+                typeLoot[i]=random.nextInt(4);
+            }
+        }
+        for (byte i = 0; i < lootCount; i++) {
+            mLoot.add(new CardLoot(this, getCardLoot((byte) typeLoot[i]), i));
+            System.out.println("loot: "+mLoot.get(i).toString());
+        }
+    }
+    private byte getCardLoot(byte type) {
+        Random random = new Random();
+        List<DataBase.Item> itemList = DataBase.ITEMS.values().stream().filter(
+                item -> (item.getMobGearScore() <= mGearScore) && (item.getType() == type)
+        ).collect(Collectors.toList());;
+        return itemList.get(random.nextInt(itemList.size())).getID();
+    }
+
+    boolean useFood(byte itemID) {
+        List<CardInventory> itemList = mInventory.stream().filter(
+                item -> item.getIdItem() == itemID
+        ).collect(Collectors.toList());
+        if (!itemList.isEmpty()){
+            DataBase.Item item = DataBase.ITEMS.get(itemID);
+            if (item.getType()==InventoryType.FOOD){
+                mHP += item.getValueOne();
+                mInventory.remove(itemList.get(0));
+                mGearScore -= item.getGearScore();
+                if (mState == State.SELECT_LOOT){
+                    tryPickingLoot();
+                    if (mLoot.isEmpty()) {
+                        mState = State.SELECT_TARGET;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+    boolean useSpell(byte itemID) {
+        List<CardInventory> itemList = mInventory.stream().filter(
+                item -> item.getIdItem() == itemID
+        ).collect(Collectors.toList());
+        if (!itemList.isEmpty()){
+            DataBase.Item item = DataBase.ITEMS.get(itemID);
+            if (item.getType()==InventoryType.SPELL){
+                if (mState == State.COMBAT){
+                    mCardTableTargetHP = (byte)(mCardTableTargetHP-item.getValueOne());
+                    mGearScore -= item.getGearScore();
+                    mInventory.remove(itemList.get(0));
+                    if (mCardTableTargetHP<1){
+                        deadMob(DataBase.MOBS.get(mCardTableTargetID));
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private short[] getStartCardTable() {
@@ -324,9 +425,14 @@ class Player {
 
     private byte getCardTable() {
         Random random = new Random();
+        boolean chest = false;
+        boolean vendor = false;
+        boolean halt = false;
+/*
         boolean chest = random.nextInt(CHANCE_CHEST)==0;
         boolean vendor = random.nextInt(CHANCE_VENDOR)==0;
         boolean halt = random.nextInt(CHANCE_HALT)==0;
+*/
         if(chest && vendor && halt) {
             switch (random.nextInt(3)){
                 case 0:{
@@ -383,16 +489,16 @@ class Player {
         try{
             if (checkStartInventory(startItemId)){
                 mGearScore = mStats.getGearScoreBonus();
-                mHands.add(new CardHand(this, startItemId[4], (byte)0));
+                mInventory.add(new CardInventory(this, startItemId[4], (byte)4, (byte) 0));
                 mGearScoreWeaponOrShieldInInventory.add(DataBase.ITEMS.get(startItemId[4]).getGearScore());
                 mGearScore += DataBase.ITEMS.get(startItemId[4]).getGearScore();
-                mHands.add(new CardHand(this, startItemId[5], (byte)1));
+                mInventory.add(new CardInventory(this, startItemId[5], (byte)5, (byte) 0));
                 mGearScoreWeaponOrShieldInInventory.add(DataBase.ITEMS.get(startItemId[5]).getGearScore());
                 mGearScore += DataBase.ITEMS.get(startItemId[5]).getGearScore();
                 for (byte i = 0; i<INVENTORY_MAX_COUNT; i++) {
                     if (startItemId[i]!=null){
                         mInventory.add(new CardInventory(this, startItemId[i], i));
-                        if (DataBase.ITEMS.get(startItemId[i]).getType()==InventoryType.SHIELD||
+                        if (DataBase.ITEMS.get(startItemId[i]).getType()==InventoryType.SHIELD ||
                                 DataBase.ITEMS.get(startItemId[i]).getType() == InventoryType.WEAPON)
                         {
                             mGearScore += getChangeGearScoreAfterReplace(
@@ -418,6 +524,14 @@ class Player {
     }
 
     private short getChangeGearScoreAfterReplace(Byte remove, Byte add) {
+        for (CardInventory itemState :
+                mInventory) {
+            DataBase.Item item = DataBase.ITEMS.get(itemState.getIdItem());
+            if (item.getType()==InventoryType.WEAPON ||
+                    item.getType()==InventoryType.SHIELD){
+                mGearScoreWeaponOrShieldInInventory.add(item.getGearScore());
+            }
+        }
         if (remove!=null){
             mGearScoreWeaponOrShieldInInventory.remove(remove);
         }
@@ -438,6 +552,8 @@ class Player {
 
     private boolean checkStartInventory(Byte[] startItemId){
         short startItemCost = 0;
+        startItemCost += DataBase.ITEMS.get(startItemId[4]).getCost();
+        startItemCost += DataBase.ITEMS.get(startItemId[5]).getCost();
         for (byte i = 0; i<INVENTORY_MAX_COUNT; i++) {
             if (startItemId[i]!=null){
                 startItemCost += DataBase.ITEMS.get(startItemId[i]).getCost();
@@ -446,8 +562,6 @@ class Player {
                 break;
             }
         }
-        startItemCost += DataBase.ITEMS.get(startItemId[4]).getCost();
-        startItemCost += DataBase.ITEMS.get(startItemId[5]).getCost();
         if (startItemCost <= mMoneyBank){
             mMoneyBank -= startItemCost;
             return true;
@@ -457,19 +571,80 @@ class Player {
         }
     }
 
-    public void setLoginTime(Timestamp loginTime) {
-        mLoginTime = loginTime;
-    }
-
     boolean isLoginCooldown(){
         return mLoginTime.before(new Timestamp(mLoginTime.getTime()+LOGIN_COOLDOWN));
     }
 
+    public void setLoginTime(Timestamp loginTime) {
+        mLoginTime = loginTime;
+    }
     @JsonIgnore
     private List<DataBase.Mob> getMobsList() {
         return DataBase.MOBS.values().stream().filter(
-                mob -> (mob.getGearScore() <= mGearScore) &&
-                        (mob.getGearScore() >= mGearScore*GEAR_SCORE_RANGE_RATE)
+                mob -> (mob.getGearScore() <= mGearScore) /*&&
+                        (mob.getGearScore() >= mGearScore*GEAR_SCORE_RANGE_RATE)*/
         ).collect(Collectors.toList());
+    }
+    @JsonIgnore
+    public int getID() {
+        return mID;
+    }
+    public byte getHP() {
+        return mHP;
+    }
+    public byte getState() {
+        return mState;
+    }
+    public int getMoney() {
+        return mMoney;
+    }
+    public int getMoneyBank() {
+        return mMoneyBank;
+    }
+    public Byte getCardTable0() {
+        return mCardTable0;
+    }
+    public Byte getCardTable1() {
+        return mCardTable1;
+    }
+    public Byte getCardTable2() {
+        return mCardTable2;
+    }
+    public Byte getCardTable3() {
+        return mCardTable3;
+    }
+    public Byte getCardTable4() {
+        return mCardTable4;
+    }
+    public Byte getCardTable5() {
+        return mCardTable5;
+    }
+    public Byte getCardTable6() {
+        return mCardTable6;
+    }
+    public Byte getCardTable7() {
+        return mCardTable7;
+    }
+    public Byte getCardTableTargetIDInArray() {
+        return mCardTableTargetIDInArray;
+    }
+    public Byte getCardTableTargetHP() {
+        return mCardTableTargetHP;
+    }
+    public List<CardInventory> getInventory() {
+        return mInventory;
+    }
+    public List<CardLoot> getLoot() {
+        return mLoot;
+    }
+    public Stats getStats() {
+        return mStats;
+    }
+    @JsonIgnore
+    public boolean isLogin() {
+        return mIsLogin;
+    }
+    public void setLogin(boolean login) {
+        mIsLogin = login;
     }
 }

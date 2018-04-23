@@ -13,11 +13,13 @@ public final class DataBase {
         VENDOR_ID.add((byte) 1);
         VENDOR_ID.add((byte) 2);
         MOBS.put((byte)4, new Mob((byte) 4,1, (byte) 1,1, CardTableType.MOB, 0, CardTableSubType.GOBLIN, 1));
+        MOBS.put((byte)3, new Mob((byte) 3,4, (byte) 4,4, CardTableType.MOB, 0, CardTableSubType.GOBLIN, 4));
         MOBS.put((byte)0, new Mob((byte) 0,0, (byte) 0,0, CardTableType.VENDOR, 9999, CardTableSubType.TRADER, 0));
-        ITEMS.put((byte)0, new Item(1,0, InventoryType.WEAPON, (byte) 0,999,(byte)0));
-        ITEMS.put((byte)1, new Item(1,0, InventoryType.WEAPON, (byte) 0,999,(byte)0));
-        ITEMS.put((byte)17, new Item(1,0, InventoryType.FOOD, (byte) 1,0,(byte)0));
-        ITEMS.put((byte)16, new Item(1,1, InventoryType.SPELL, (byte) 1,0,(byte)0));
+        ITEMS.put((byte)0, new Item((byte) 0,(byte) 1,0, InventoryType.WEAPON, (byte) 0,999,(byte)0));
+        ITEMS.put((byte)12, new Item((byte) 12,(byte) 2,2, InventoryType.WEAPON, (byte) 2,0,(byte)10));
+        ITEMS.put((byte)7, new Item((byte) 7,(byte) 2,2, InventoryType.SHIELD, (byte) 2,0,(byte)10));
+        ITEMS.put((byte)1, new Item((byte) 1,(byte) 1,0, InventoryType.FOOD, (byte) 1,0,(byte)0));
+        ITEMS.put((byte)16, new Item((byte) 16,(byte) 1,1, InventoryType.SPELL, (byte) 1,0,(byte)0));
     }
 
     static class Mob {
@@ -30,7 +32,7 @@ public final class DataBase {
         private int mSubType;
         private int mExperience;
 
-        public Mob(byte ID, int valueOne, byte valueTwo, int money, int type, int gearScore, int subType, int experience) {
+        Mob(byte ID, int valueOne, byte valueTwo, int money, int type, int gearScore, int subType, int experience) {
             mID = ID;
             mValueOne = valueOne;
             mValueTwo = valueTwo;
@@ -68,14 +70,18 @@ public final class DataBase {
     }
 
     static class Item {
-        private int mValueOne;
+        private byte mID;
+        private byte mValueOne;
         private int mCost;
         private int mType;
         private byte mGearScore;
         private int mMobGearScore;
         private byte mDurability;
 
-        public int getValueOne() {
+        public byte getID() {
+            return mID;
+        }
+        public byte getValueOne() {
             return mValueOne;
         }
         public int getCost() {
@@ -94,7 +100,8 @@ public final class DataBase {
             return mDurability;
         }
 
-        Item(int valueOne, int cost, int type, byte gearScore, int mobGearScore, byte durability) {
+        Item(byte ID,byte valueOne, int cost, int type, byte gearScore, int mobGearScore, byte durability) {
+            mID = ID;
             mValueOne = valueOne;
             mCost = cost;
             mType = type;
