@@ -17,11 +17,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 
@@ -29,9 +31,7 @@ import org.hibernate.Session;
 
 public class Main {
     final static ExecutorService threadPool = Executors.newFixedThreadPool(4);
-/*
-    final static ScheduledExecutorService SCHEDULED_EXECUTOR_SERVICE = Executors.newSingleThreadScheduledExecutor();
-*/
+    //final static ScheduledExecutorService SCHEDULED_EXECUTOR_SERVICE = Executors.newSingleThreadScheduledExecutor();
 
     static class DirectExecutor implements Executor {
 
@@ -53,6 +53,7 @@ public class Main {
         server.createContext("/start", new Start());
         server.createContext("/target", new SetTarget());
         server.createContext("/damage", new Damage());
+        server.createContext("/continue", new Continue());
         server.createContext("/use/spell", new UseSpell());
         server.createContext("/use/food", new UseFood());
         server.createContext("/stats/confirm", new StatsConfirm());
@@ -244,6 +245,34 @@ public class Main {
                 }
                 commitTransactionAndSendResponse(t, mapper, session, response);
                 System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop Damage");
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class Continue implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start Continue");
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                CardInventory[] inventory = mapper.readValue(request.getData(), CardInventory[].class);
+                Session session = HibernateUtil.getSessionFactory().openSession();
+                session.beginTransaction();
+                SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
+                Player player = session.load(Player.class, sessionInfo.getIdPlayer());
+                Response response = new Response();
+                if (player.selectLoot(inventory)){
+                    response.setData(player.getSelectLootResponse());
+                }
+                else{
+                    response.setError(ResponceErrorCode.CHEAT_OR_BUG);
+                }
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop Continue");
             }
             catch (Exception e){
                 e.printStackTrace();

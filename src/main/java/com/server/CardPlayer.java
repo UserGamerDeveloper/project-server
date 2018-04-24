@@ -72,8 +72,26 @@ abstract class CardPlayer {
     public Player getPlayer() {
         return mPlayer;
     }
+    public void setPlayer(Player player) {
+        mPlayer = player;
+    }
+    public void setId(int id) {
+        mId = id;
+    }
+    public void setSlotId(byte slotId) {
+        mSlotId = slotId;
+    }
+    public void setIdItem(byte idItem) {
+        mIdItem = idItem;
+    }
     void setDurability(byte durability){
         this.mDurability = durability;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        CardPlayer cardPlayer = (CardPlayer)obj;
+        return mIdItem == cardPlayer.getIdItem() && mDurability == cardPlayer.getDurability();
     }
 
     @Override

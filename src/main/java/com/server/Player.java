@@ -141,55 +141,66 @@ class Player {
             response.setLoot(mapper.writeValueAsString(mLoot));
             tryPickingLoot();
             if (mLoot.isEmpty()) {
-                mState = State.SELECT_TARGET;
-                if (mCardTableTargetIDInArray==1){
-                    mCardTable5 = mCardTable3;
-                    mCardTable7 = mCardTable4;
-                    mCardTable3 = mCardTable0!=null ? mCardTable0 : getCardTable();
-                    mCardTable4 = mCardTable2!=null ? mCardTable2 : getCardTable();
-                    mCardTable0 = null;
-                    mCardTable2 = null;
-                    mCardTable1 = getCardTable();
-                    mCardTable6 = getCardTable();
-                }
-                if (mCardTableTargetIDInArray==3){
-                    mCardTable7 = mCardTable6;
-                    mCardTable2 = mCardTable1;
-                    mCardTable6 = mCardTable5!=null ? mCardTable5 : getCardTable();
-                    mCardTable1 = mCardTable0!=null ? mCardTable0 : getCardTable();
-                    mCardTable5 = null;
-                    mCardTable0 = null;
-                    mCardTable3 = getCardTable();
-                    mCardTable4 = getCardTable();
-                }
-                if (mCardTableTargetIDInArray==4){
-                    mCardTable5 = mCardTable6;
-                    mCardTable0 = mCardTable1;
-                    mCardTable6 = mCardTable7!=null ? mCardTable7 : getCardTable();
-                    mCardTable1 = mCardTable2!=null ? mCardTable2 : getCardTable();
-                    mCardTable7 = null;
-                    mCardTable2 = null;
-                    mCardTable3 = getCardTable();
-                    mCardTable4 = getCardTable();
-                }
-                if (mCardTableTargetIDInArray==6){
-                    mCardTable0 = mCardTable3;
-                    mCardTable2 = mCardTable4;
-                    mCardTable3 = mCardTable5!=null ? mCardTable5 : getCardTable();
-                    mCardTable4 = mCardTable7!=null ? mCardTable7 : getCardTable();
-                    mCardTable5 = null;
-                    mCardTable7 = null;
-                    mCardTable1 = getCardTable();
-                    mCardTable6 = getCardTable();
-                }
+                setStateSelectTarget();
                 response.setCardTableID(getStartCardTable());
-                mCardTableTargetIDInArray = null;
             }
             resonceStr = mapper.writeValueAsString(response);
         }
         System.out.println("getDamageResponse: "+resonceStr);
         return resonceStr;
     }
+    String getSelectLootResponse() throws JsonProcessingException {
+        setStateSelectTarget();
+        ObjectMapper mapper = new ObjectMapper();
+        String response = mapper.writeValueAsString(getStartCardTable());
+        System.out.println("getSelectLootResponse: "+response);
+        return response;
+    }
+    private void setStateSelectTarget() {
+        mState = State.SELECT_TARGET;
+        if (mCardTableTargetIDInArray==1){
+            mCardTable5 = mCardTable3;
+            mCardTable7 = mCardTable4;
+            mCardTable3 = mCardTable0!=null ? mCardTable0 : getCardTable();
+            mCardTable4 = mCardTable2!=null ? mCardTable2 : getCardTable();
+            mCardTable0 = null;
+            mCardTable2 = null;
+            mCardTable1 = getCardTable();
+            mCardTable6 = getCardTable();
+        }
+        if (mCardTableTargetIDInArray==3){
+            mCardTable7 = mCardTable6;
+            mCardTable2 = mCardTable1;
+            mCardTable6 = mCardTable5!=null ? mCardTable5 : getCardTable();
+            mCardTable1 = mCardTable0!=null ? mCardTable0 : getCardTable();
+            mCardTable5 = null;
+            mCardTable0 = null;
+            mCardTable3 = getCardTable();
+            mCardTable4 = getCardTable();
+        }
+        if (mCardTableTargetIDInArray==4){
+            mCardTable5 = mCardTable6;
+            mCardTable0 = mCardTable1;
+            mCardTable6 = mCardTable7!=null ? mCardTable7 : getCardTable();
+            mCardTable1 = mCardTable2!=null ? mCardTable2 : getCardTable();
+            mCardTable7 = null;
+            mCardTable2 = null;
+            mCardTable3 = getCardTable();
+            mCardTable4 = getCardTable();
+        }
+        if (mCardTableTargetIDInArray==6){
+            mCardTable0 = mCardTable3;
+            mCardTable2 = mCardTable4;
+            mCardTable3 = mCardTable5!=null ? mCardTable5 : getCardTable();
+            mCardTable4 = mCardTable7!=null ? mCardTable7 : getCardTable();
+            mCardTable5 = null;
+            mCardTable7 = null;
+            mCardTable1 = getCardTable();
+            mCardTable6 = getCardTable();
+        }
+        mCardTableTargetIDInArray = null;
+    }
+
     private void tryPickingLoot() {
         while (!mLoot.isEmpty() && mInventory.size() < INVENTORY_MAX_COUNT) {
             DataBase.Item item = DataBase.ITEMS.get(mLoot.get(0).getIdItem());
@@ -369,6 +380,24 @@ class Player {
                 item -> (item.getMobGearScore() <= mGearScore) && (item.getType() == type)
         ).collect(Collectors.toList());;
         return itemList.get(random.nextInt(itemList.size())).getID();
+    }
+
+    boolean selectLoot(CardInventory[] inventory){
+        if (mState == State.SELECT_LOOT){
+            List<CardInventory> inventoryList = Arrays.asList(inventory);
+            ArrayList<CardPlayer> invetoryAndLoot = new ArrayList<>();
+            invetoryAndLoot.addAll(mInventory);
+            invetoryAndLoot.addAll(mLoot);
+            if (invetoryAndLoot.containsAll(inventoryList)){
+                mInventory.clear();
+                for (CardInventory cardPlayer : inventoryList) {
+                    cardPlayer.setPlayer(this);
+                    mInventory.add(cardPlayer);
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     boolean useFood(byte itemID) {
