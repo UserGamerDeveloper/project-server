@@ -96,6 +96,6 @@ abstract class CardPlayer {
 
     @Override
     public String toString() {
-        return mPlayer.getID()+" "+mSlotId+" "+mIdItem+" "+mDurability;
+        return mSlotId+" "+mIdItem+" "+mDurability;
     }
 }

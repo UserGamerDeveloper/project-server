@@ -156,6 +156,19 @@ class Player {
         System.out.println("getSelectLootResponse: "+response);
         return response;
     }
+    String getUseFoodResponse() throws JsonProcessingException {
+        String response = null;
+        if (mState == State.SELECT_LOOT){
+            tryPickingLoot();
+            if (mLoot.isEmpty()) {
+                setStateSelectTarget();
+                ObjectMapper mapper = new ObjectMapper();
+                response = mapper.writeValueAsString(getStartCardTable());
+            }
+        }
+        System.out.println("getUseFoodResponse: "+response);
+        return response;
+    }
     private void setStateSelectTarget() {
         mState = State.SELECT_TARGET;
         if (mCardTableTargetIDInArray==1){
@@ -270,10 +283,12 @@ class Player {
                 List<CardInventory> handOneState = mInventory.stream().filter(
                         item -> item.getIdItem() == handsId[0]
                 ).collect(Collectors.toList());
+                System.out.println("handOneState.get(0).toString()" + handOneState.get(0).toString());
                 if (!handOneState.isEmpty()){
                     List<CardInventory> handTwoState = mInventory.stream().filter(
                             item -> (item.getIdItem() == handsId[1]) && (handOneState.get(0)!=item)
                     ).collect(Collectors.toList());
+                    System.out.println("handTwoState.get(0).toString()" + handTwoState.get(0).toString());
                     if (!handTwoState.isEmpty()){
                         DataBase.Mob mobTarget = DataBase.MOBS.get(mCardTableTargetID);
                         int mobDamage = mobTarget.getValueOne();
@@ -388,6 +403,12 @@ class Player {
             ArrayList<CardPlayer> invetoryAndLoot = new ArrayList<>();
             invetoryAndLoot.addAll(mInventory);
             invetoryAndLoot.addAll(mLoot);
+            for (CardPlayer cardPlayer : invetoryAndLoot) {
+                System.out.println("invetoryAndLoot: "+cardPlayer.toString());
+            }
+            for (CardPlayer cardPlayer : inventoryList) {
+                System.out.println("inventoryList: "+cardPlayer.toString());
+            }
             if (invetoryAndLoot.containsAll(inventoryList)){
                 mInventory.clear();
                 for (CardInventory cardPlayer : inventoryList) {
@@ -401,21 +422,27 @@ class Player {
     }
 
     boolean useFood(byte itemID) {
-        List<CardInventory> itemList = mInventory.stream().filter(
-                item -> item.getIdItem() == itemID
-        ).collect(Collectors.toList());
-        if (!itemList.isEmpty()){
-            DataBase.Item item = DataBase.ITEMS.get(itemID);
-            if (item.getType()==InventoryType.FOOD){
+        DataBase.Item item = DataBase.ITEMS.get(itemID);
+        if (item.getType()==InventoryType.FOOD){
+            List<CardPlayer> itemList;
+            if (mState==State.SELECT_LOOT){
+                itemList = mLoot.stream().filter(
+                        itemInLoot -> itemInLoot.getIdItem() == itemID
+                ).collect(Collectors.toList());
+                if (!itemList.isEmpty()){
+                    mHP += item.getValueOne();
+                    mLoot.remove(itemList.get(0));
+                    mGearScore -= item.getGearScore();
+                    return true;
+                }
+            }
+            itemList = mInventory.stream().filter(
+                    itemInInventory -> itemInInventory.getIdItem() == itemID
+            ).collect(Collectors.toList());
+            if (!itemList.isEmpty()){
                 mHP += item.getValueOne();
                 mInventory.remove(itemList.get(0));
                 mGearScore -= item.getGearScore();
-                if (mState == State.SELECT_LOOT){
-                    tryPickingLoot();
-                    if (mLoot.isEmpty()) {
-                        mState = State.SELECT_TARGET;
-                    }
-                }
                 return true;
             }
         }

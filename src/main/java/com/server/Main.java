@@ -321,7 +321,10 @@ public class Main {
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
                 Response response = new Response();
-                if (!player.useFood(itemID)){
+                if (player.useFood(itemID)){
+                    response.setData(player.getUseFoodResponse());
+                }
+                else{
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);
                 }
                 commitTransactionAndSendResponse(t, mapper, session, response);
