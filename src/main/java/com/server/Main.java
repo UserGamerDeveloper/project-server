@@ -31,7 +31,7 @@ import org.hibernate.Session;
 
 public class Main {
     final static ExecutorService threadPool = Executors.newFixedThreadPool(4);
-    //final static ScheduledExecutorService SCHEDULED_EXECUTOR_SERVICE = Executors.newSingleThreadScheduledExecutor();
+    //final static ScheduledExecutorService SCHEDULED_EXECUTOR_SERVICE = Executors.newSingleThreadScheduledExecutor();;
 
     static class DirectExecutor implements Executor {
 
