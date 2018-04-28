@@ -231,13 +231,13 @@ public class Main {
                 System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start Damage");
                 ObjectMapper mapper = new ObjectMapper();
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
-                byte[] handsId = mapper.readValue(request.getData(), byte[].class);
+                CardInventory[] hands = mapper.readValue(request.getData(), CardInventory[].class);
                 Session session = HibernateUtil.getSessionFactory().openSession();
                 session.beginTransaction();
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
                 Response response = new Response();
-                if (player.damage(handsId)){
+                if (player.damage(hands)){
                     response.setData(player.getDamageResponse());
                 }
                 else{

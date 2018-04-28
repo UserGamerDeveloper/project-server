@@ -273,22 +273,22 @@ class Player {
         }
     }
 
-    boolean damage(byte[] handsId){
+    boolean damage(CardInventory[] hands){
         if (mState == State.COMBAT){
-            DataBase.Item handOne = DataBase.ITEMS.get(handsId[0]);
-            DataBase.Item handTwo = DataBase.ITEMS.get(handsId[1]);
+            DataBase.Item handOne = DataBase.ITEMS.get(hands[0].getIdItem());
+            DataBase.Item handTwo = DataBase.ITEMS.get(hands[1].getIdItem());
             if ((handOne.getType()==InventoryType.WEAPON || handOne.getType()==InventoryType.SHIELD) &&
                     (handTwo.getType()==InventoryType.WEAPON || handTwo.getType()==InventoryType.SHIELD))
             {
                 List<CardInventory> handOneState = mInventory.stream().filter(
-                        item -> item.getIdItem() == handsId[0]
+                        item -> hands[0].equals(item)
                 ).collect(Collectors.toList());
-                System.out.println("handOneState.get(0).toString()" + handOneState.get(0).toString());
+                System.out.println("handOneState.get(0).toString() " + handOneState.get(0).toString());
                 if (!handOneState.isEmpty()){
                     List<CardInventory> handTwoState = mInventory.stream().filter(
-                            item -> (item.getIdItem() == handsId[1]) && (handOneState.get(0)!=item)
+                            item -> hands[1].equals(item) && handOneState.get(0)!=item
                     ).collect(Collectors.toList());
-                    System.out.println("handTwoState.get(0).toString()" + handTwoState.get(0).toString());
+                    System.out.println("handTwoState.get(0).toString() " + handTwoState.get(0).toString());
                     if (!handTwoState.isEmpty()){
                         DataBase.Mob mobTarget = DataBase.MOBS.get(mCardTableTargetID);
                         int mobDamage = mobTarget.getValueOne();
@@ -317,7 +317,6 @@ class Player {
                             mMoneyBank += mMoney;
                             mMoney = 0;
                             mInventory.clear();
-                            System.out.println("mInventory.isEmpty()" + mInventory.isEmpty());
                             return true;
                         }
 
@@ -411,6 +410,7 @@ class Player {
             }
             if (invetoryAndLoot.containsAll(inventoryList)){
                 mInventory.clear();
+                mLoot.clear();
                 for (CardInventory cardPlayer : inventoryList) {
                     cardPlayer.setPlayer(this);
                     mInventory.add(cardPlayer);
