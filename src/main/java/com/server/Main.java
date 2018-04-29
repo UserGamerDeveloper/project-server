@@ -17,13 +17,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 
@@ -46,7 +44,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
-        HibernateUtil.getSessionFactory().openSession();
+        Util.getSessionFactory().openSession();
         DirectExecutor directExecutor = new DirectExecutor();
         HttpServer server = HttpServer.create(new InetSocketAddress(5678), 0);
         server.createContext("/login", new Login());
@@ -104,7 +102,7 @@ public class Main {
                 GoogleIdToken idToken = tokenResponse.parseIdToken();
                 GoogleIdToken.Payload payload = idToken.getPayload();
                 System.out.println("email: " + payload.getEmail()+" "+payload.getEmailVerified());
-                Session session = HibernateUtil.getSessionFactory().openSession();
+                Session session = Util.getSessionFactory().openSession();
                 List<Player> playerList = session.createNativeQuery(
                         String.format(getPlayerQuery, payload.getEmail()),
                         Player.class
@@ -175,7 +173,7 @@ public class Main {
                 ObjectMapper mapper = new ObjectMapper();
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
                 Byte[] startItemId = mapper.readValue(request.getData(), Byte[].class);
-                Session session = HibernateUtil.getSessionFactory().openSession();
+                Session session = Util.getSessionFactory().openSession();
                 session.beginTransaction();
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
@@ -205,12 +203,15 @@ public class Main {
                 ObjectMapper mapper = new ObjectMapper();
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
                 byte id = mapper.readValue(request.getData(), byte.class);
-                Session session = HibernateUtil.getSessionFactory().openSession();
+                Session session = Util.getSessionFactory().openSession();
                 session.beginTransaction();
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
                 Response response = new Response();
-                if (!player.setTarget(id)){
+                if (player.setTarget(id)){
+                    response.setData(player.getSetTargetResponse());
+                }
+                else{
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);
                 }
                 commitTransactionAndSendResponse(t, mapper, session, response);
@@ -232,7 +233,7 @@ public class Main {
                 ObjectMapper mapper = new ObjectMapper();
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
                 CardInventory[] hands = mapper.readValue(request.getData(), CardInventory[].class);
-                Session session = HibernateUtil.getSessionFactory().openSession();
+                Session session = Util.getSessionFactory().openSession();
                 session.beginTransaction();
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
@@ -260,7 +261,7 @@ public class Main {
                 ObjectMapper mapper = new ObjectMapper();
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
                 CardInventory[] inventory = mapper.readValue(request.getData(), CardInventory[].class);
-                Session session = HibernateUtil.getSessionFactory().openSession();
+                Session session = Util.getSessionFactory().openSession();
                 session.beginTransaction();
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
@@ -288,7 +289,7 @@ public class Main {
                 ObjectMapper mapper = new ObjectMapper();
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
                 byte itemID = mapper.readValue(request.getData(), byte.class);
-                Session session = HibernateUtil.getSessionFactory().openSession();
+                Session session = Util.getSessionFactory().openSession();
                 session.beginTransaction();
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
@@ -316,7 +317,7 @@ public class Main {
                 ObjectMapper mapper = new ObjectMapper();
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
                 byte itemID = mapper.readValue(request.getData(), byte.class);
-                Session session = HibernateUtil.getSessionFactory().openSession();
+                Session session = Util.getSessionFactory().openSession();
                 session.beginTransaction();
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
@@ -346,7 +347,7 @@ public class Main {
                 ObjectMapper mapper = new ObjectMapper();
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
                 Stats.Request data = mapper.readValue(request.getData(), Stats.Request.class);
-                Session session = HibernateUtil.getSessionFactory().openSession();
+                Session session = Util.getSessionFactory().openSession();
                 session.beginTransaction();
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
@@ -374,7 +375,7 @@ public class Main {
                 );
                 ObjectMapper mapper = new ObjectMapper();
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
-                Session session = HibernateUtil.getSessionFactory().openSession();
+                Session session = Util.getSessionFactory().openSession();
                 session.beginTransaction();
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());

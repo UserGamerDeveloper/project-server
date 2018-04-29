@@ -15,6 +15,8 @@ public final class DataBase {
         MOBS.put((byte)4, new Mob((byte) 4,1, (byte) 1,1, CardTableType.MOB, 0, CardTableSubType.GOBLIN, 1));
         MOBS.put((byte)3, new Mob((byte) 3,4, (byte) 4,4, CardTableType.MOB, 0, CardTableSubType.GOBLIN, 4));
         MOBS.put((byte)0, new Mob((byte) 0,0, (byte) 0,0, CardTableType.VENDOR, 9999, CardTableSubType.TRADER, 0));
+        MOBS.put((byte)1, new Mob((byte) 1,0, (byte) 0,0, CardTableType.VENDOR, 9999, CardTableSubType.BLACKSMITH, 0));
+        MOBS.put((byte)2, new Mob((byte) 2,0, (byte) 0,0, CardTableType.VENDOR, 9999, CardTableSubType.INNKEEPER, 0));
         ITEMS.put((byte)0, new Item((byte) 0,(byte) 1,0, InventoryType.WEAPON, (byte) 0,999,(byte)0));
         ITEMS.put((byte)12, new Item((byte) 12,(byte) 2,2, InventoryType.WEAPON, (byte) 2,0,(byte)10));
         ITEMS.put((byte)7, new Item((byte) 7,(byte) 2,2, InventoryType.SHIELD, (byte) 2,0,(byte)10));

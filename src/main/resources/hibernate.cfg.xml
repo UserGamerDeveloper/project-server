@@ -40,6 +40,7 @@
         <mapping class="com.server.CardLoot"/>
         <mapping class="com.server.CardInventory"/>
         <mapping class="com.server.CardHand"/>
+        <mapping class="com.server.CardTrade"/>
 
     </session-factory>
 

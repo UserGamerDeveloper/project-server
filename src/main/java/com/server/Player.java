@@ -31,6 +31,10 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.crypto.Data;
 
+import sun.nio.ch.Util;
+
+import static com.server.Util.getObjectMapper;
+
 @Entity
 @Table(name="player")
 class Player {
@@ -43,6 +47,7 @@ class Player {
     private static final byte CHANCE_WEAPON_OE_SHIELD = 5;
     private static final byte LOOT_MAX_COUNT = 3;
     private static final byte INVENTORY_MAX_COUNT = 6;
+    private static final byte TRADECARD_MAX_COUNT = 3;
     private static final byte HP_DEFAULT = 30;
     private static final byte CARD_TABLE_MAX_COUNT = 8;
     private static final long LOGIN_COOLDOWN = 60000L;
@@ -88,6 +93,9 @@ class Player {
     @LazyCollection(LazyCollectionOption.FALSE)
     @OneToMany(mappedBy="mPlayer", orphanRemoval = true, cascade= CascadeType.ALL)
     private List<CardLoot> mLoot =new ArrayList<>();
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @OneToMany(mappedBy="mPlayer", orphanRemoval = true, cascade= CascadeType.ALL)
+    private List<CardTrade> mTrade = new ArrayList<>();
     @Column(name="isLogin")
     private boolean mIsLogin;
     @Column(name="loginTime")
@@ -131,6 +139,48 @@ class Player {
         ObjectMapper mapper = new ObjectMapper();
         String response = mapper.writeValueAsString(getStartCardTable());
         System.out.println("getStartResponse: "+response);
+        return response;
+    }
+    String getSetTargetResponse() throws JsonProcessingException {
+        String response = null;
+        DataBase.Mob mob = DataBase.MOBS.get(mCardTableTargetID);
+        switch (mob.getType()){
+            case CardTableType.MOB:{
+                mState = State.COMBAT;
+                mCardTableTargetHP = mob.getValueTwo();
+                break;
+            }
+            case CardTableType.VENDOR:{
+                mState = State.TRADE;
+                Random random = com.server.Util.getRandom();
+                switch (mob.getSubType()){
+                    case CardTableSubType.TRADER:{
+                        for (byte i = 0; i < TRADECARD_MAX_COUNT; i++) {
+                            mTrade.add(new CardTrade(this, getCardLoot((byte)random.nextInt(4)), i));
+                            System.out.println("trader: "+mTrade.get(i).toString());
+                        }
+                        break;
+                    }
+                    case CardTableSubType.BLACKSMITH:{
+                        for (byte i = 0; i < TRADECARD_MAX_COUNT; i++) {
+                            mTrade.add(new CardTrade(this, getCardLoot((byte)random.nextInt(2)), i));
+                            System.out.println("BLACKSMITH: "+mTrade.get(i).toString());
+                        }
+                        break;
+                    }
+                    case CardTableSubType.INNKEEPER:{
+                        for (byte i = 0; i < TRADECARD_MAX_COUNT; i++) {
+                            mTrade.add(new CardTrade(this, getCardLoot(InventoryType.FOOD), i));
+                            System.out.println("INNKEEPER: "+mTrade.get(i).toString());
+                        }
+                        break;
+                    }
+                }
+                response = getObjectMapper().writeValueAsString(mTrade);
+                break;
+            }
+        }
+        System.out.println("getSetTargetResponse: " + response);
         return response;
     }
     String getDamageResponse() throws JsonProcessingException {
@@ -264,8 +314,6 @@ class Player {
                     return false;
                 }
             }
-            mCardTableTargetHP = DataBase.MOBS.get(mCardTableTargetID).getValueTwo();
-            mState = State.COMBAT;
             return true;
         }
         else {
@@ -481,11 +529,10 @@ class Player {
     private byte getCardTable() {
         Random random = new Random();
         boolean chest = false;
-        boolean vendor = false;
         boolean halt = false;
+        boolean vendor = random.nextInt(CHANCE_VENDOR)==0;
 /*
         boolean chest = random.nextInt(CHANCE_CHEST)==0;
-        boolean vendor = random.nextInt(CHANCE_VENDOR)==0;
         boolean halt = random.nextInt(CHANCE_HALT)==0;
 */
         if(chest && vendor && halt) {
@@ -701,5 +748,11 @@ class Player {
     }
     public void setLogin(boolean login) {
         mIsLogin = login;
+    }
+    public List<CardTrade> getTrade() {
+        return mTrade;
+    }
+    public void setTrade(List<CardTrade> trade) {
+        mTrade = trade;
     }
 }
