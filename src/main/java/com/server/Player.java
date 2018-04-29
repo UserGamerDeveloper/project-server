@@ -40,7 +40,7 @@ import static com.server.Util.getObjectMapper;
 class Player {
     private static final float GEAR_SCORE_RANGE_RATE = 0.5f;
     private static final byte CHANCE_HALT = 6;
-    private static final byte CHANCE_VENDOR = 20;
+    private static final byte CHANCE_VENDOR = 2;
     private static final byte CHANCE_CHEST = 40;
     private static final byte CHANCE_FOOD = 3;
     private static final byte CHANCE_SPELL = 10;
@@ -199,11 +199,11 @@ class Player {
         System.out.println("getDamageResponse: "+resonceStr);
         return resonceStr;
     }
-    String getSelectLootResponse() throws JsonProcessingException {
+    String getContinueResponse() throws JsonProcessingException {
         setStateSelectTarget();
         ObjectMapper mapper = new ObjectMapper();
         String response = mapper.writeValueAsString(getStartCardTable());
-        System.out.println("getSelectLootResponse: "+response);
+        System.out.println("getContinueResponse: "+response);
         return response;
     }
     String getUseFoodResponse() throws JsonProcessingException {
@@ -469,6 +469,15 @@ class Player {
         return false;
     }
 
+    boolean exitTrade(){
+        if (mState == State.TRADE){
+            mTrade.clear();
+            mCardTableTargetID = null;
+            return true;
+        }
+        return false;
+    }
+
     boolean useFood(byte itemID) {
         DataBase.Item item = DataBase.ITEMS.get(itemID);
         if (item.getType()==InventoryType.FOOD){
@@ -496,6 +505,7 @@ class Player {
         }
         return false;
     }
+
     boolean useSpell(byte itemID) {
         List<CardInventory> itemList = mInventory.stream().filter(
                 item -> item.getIdItem() == itemID
@@ -677,6 +687,7 @@ class Player {
         return mLoginTime.before(new Timestamp(mLoginTime.getTime()+LOGIN_COOLDOWN));
     }
 
+    //region setters/getters
     public void setLoginTime(Timestamp loginTime) {
         mLoginTime = loginTime;
     }
@@ -755,4 +766,5 @@ class Player {
     public void setTrade(List<CardTrade> trade) {
         mTrade = trade;
     }
+    //endregion
 }

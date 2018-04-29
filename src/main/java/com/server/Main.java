@@ -52,6 +52,7 @@ public class Main {
         server.createContext("/target", new SetTarget());
         server.createContext("/damage", new Damage());
         server.createContext("/continue", new Continue());
+        server.createContext("/trade/exit", new TradeExit());
         server.createContext("/use/spell", new UseSpell());
         server.createContext("/use/food", new UseFood());
         server.createContext("/stats/confirm", new StatsConfirm());
@@ -157,7 +158,7 @@ public class Main {
                         }
                 }
                 commitTransactionAndSendResponse(t, mapper, session, response);
-                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop");
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop Login");
             }
             catch (Exception e){
                 e.printStackTrace();
@@ -267,13 +268,40 @@ public class Main {
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
                 Response response = new Response();
                 if (player.selectLoot(inventory)){
-                    response.setData(player.getSelectLootResponse());
+                    response.setData(player.getContinueResponse());
                 }
                 else{
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);
                 }
                 commitTransactionAndSendResponse(t, mapper, session, response);
                 System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop Continue");
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class TradeExit implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start TradeExit");
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                Session session = Util.getSessionFactory().openSession();
+                session.beginTransaction();
+                SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
+                Player player = session.load(Player.class, sessionInfo.getIdPlayer());
+                Response response = new Response();
+                if (player.exitTrade()){
+                    response.setData(player.getContinueResponse());
+                }
+                else{
+                    response.setError(ResponceErrorCode.CHEAT_OR_BUG);
+                }
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop TradeExit");
             }
             catch (Exception e){
                 e.printStackTrace();
