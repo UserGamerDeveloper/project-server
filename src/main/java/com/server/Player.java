@@ -4,15 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.hibernate.Session;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -29,9 +26,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.xml.crypto.Data;
-
-import sun.nio.ch.Util;
 
 import static com.server.Util.getObjectMapper;
 
@@ -45,6 +39,7 @@ class Player {
     private static final byte CHANCE_FOOD = 3;
     private static final byte CHANCE_SPELL = 10;
     private static final byte CHANCE_WEAPON_OE_SHIELD = 5;
+    private static final byte COST_VENDOR_SKILL = 1;
     private static final byte LOOT_MAX_COUNT = 3;
     private static final byte INVENTORY_MAX_COUNT = 6;
     private static final byte TRADECARD_MAX_COUNT = 3;
@@ -198,6 +193,11 @@ class Player {
         }
         System.out.println("getDamageResponse: "+resonceStr);
         return resonceStr;
+    }
+    String getUseSkillTraderResponse() throws JsonProcessingException {
+        String response = getObjectMapper().writeValueAsString(mTrade);
+        System.out.println("getUseSkillTraderResponse: " + response);
+        return response;
     }
     String getContinueResponse() throws JsonProcessingException {
         setStateSelectTarget();
@@ -499,6 +499,25 @@ class Player {
                     mInventory.remove(cardInventoryState.get(0));
                     DataBase.Item item = DataBase.ITEMS.get(cardInventory.getIdItem());
                     mMoney += item.getCost();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    boolean useSkillTrader(){
+        if (mState == State.TRADE){
+            if (mMoney >= COST_VENDOR_SKILL){
+                DataBase.Mob mob = DataBase.MOBS.get(mCardTableTargetID);
+                if (mob.getSubType()==CardTableSubType.TRADER){
+                    mMoney -= COST_VENDOR_SKILL;
+                    mTrade.clear();
+                    Random random = Util.getRandom();
+                    for (byte i = 0; i < TRADECARD_MAX_COUNT; i++) {
+                        mTrade.add(new CardTrade(this, getCardLoot((byte)random.nextInt(4)), i));
+                        System.out.println("trader: "+mTrade.get(i).toString());
+                    }
                     return true;
                 }
             }
