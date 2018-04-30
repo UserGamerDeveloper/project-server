@@ -15,6 +15,5 @@ public class CardTrade extends CardPlayer{
         super(player, idItem, slotId, durability);
     }
 
-    public CardTrade() {
-    }
+    public CardTrade() {}
 }

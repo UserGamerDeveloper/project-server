@@ -469,6 +469,26 @@ class Player {
         return false;
     }
 
+    boolean buy(CardTrade cardTrade){
+        if (mState == State.TRADE){
+            if (mInventory.size() < INVENTORY_MAX_COUNT){
+                DataBase.Item item = DataBase.ITEMS.get(cardTrade.getIdItem());
+                if (mMoney >= item.getCost()){
+                    List<CardTrade> cardTradeState = mTrade.stream().filter(
+                            cardTrade::equals
+                    ).collect(Collectors.toList());
+                    if (!cardTradeState.isEmpty()){
+                        cardTrade = cardTradeState.get(0);
+                        mInventory.add(new CardInventory(cardTrade));
+                        mTrade.remove(cardTrade);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     boolean exitTrade(){
         if (mState == State.TRADE){
             mTrade.clear();

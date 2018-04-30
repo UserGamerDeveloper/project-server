@@ -47,8 +47,10 @@ abstract class CardPlayer {
         mDurability = durability;
     }
     public CardPlayer() {}
-
-    void copy(CardPlayer card){
+    public CardPlayer(CardPlayer card) {
+        this.mPlayer = card.getPlayer();
+        this.mIdItem = card.getIdItem();
+        this.mSlotId = card.getSlotId();
         this.mDurability = card.getDurability();
     }
 
