@@ -53,6 +53,7 @@ public class Main {
         server.createContext("/damage", new Damage());
         server.createContext("/continue", new Continue());
         server.createContext("/trade/buy", new TradeBuy());
+        server.createContext("/trade/sell", new TradeSell());
         server.createContext("/trade/exit", new TradeExit());
         server.createContext("/use/spell", new UseSpell());
         server.createContext("/use/food", new UseFood());
@@ -301,6 +302,31 @@ public class Main {
                 }
                 commitTransactionAndSendResponse(t, mapper, session, response);
                 System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop TradeBuy");
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class TradeSell implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start TradeSell");
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                Session session = Util.getSessionFactory().openSession();
+                session.beginTransaction();
+                SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
+                Player player = session.load(Player.class, sessionInfo.getIdPlayer());
+                Response response = new Response();
+                CardInventory item = mapper.readValue(request.getData(), CardInventory.class);
+                if (!player.sell(item)){
+                    response.setError(ResponceErrorCode.CHEAT_OR_BUG);
+                }
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop TradeSell");
             }
             catch (Exception e){
                 e.printStackTrace();

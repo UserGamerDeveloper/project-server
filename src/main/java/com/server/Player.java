@@ -489,6 +489,23 @@ class Player {
         return false;
     }
 
+    boolean sell(CardInventory cardInventory){
+        if (mState == State.TRADE){
+            if (cardInventory.getIdItem()!=0){
+                List<CardInventory> cardInventoryState = mInventory.stream().filter(
+                        cardInventory::equals
+                ).collect(Collectors.toList());
+                if (!cardInventoryState.isEmpty()){
+                    mInventory.remove(cardInventoryState.get(0));
+                    DataBase.Item item = DataBase.ITEMS.get(cardInventory.getIdItem());
+                    mMoney += item.getCost();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     boolean exitTrade(){
         if (mState == State.TRADE){
             mTrade.clear();
