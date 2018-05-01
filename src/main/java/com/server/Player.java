@@ -529,15 +529,32 @@ class Player {
         if (mState == State.TRADE){
             if (mMoney >= COST_VENDOR_SKILL){
                 if (itemState.getIdItem()!=0){
-                    List<CardInventory> cardInventoryState = mInventory.stream().filter(
-                            itemState::equals
-                    ).collect(Collectors.toList());
-                    if (!cardInventoryState.isEmpty()){
-                        mMoney -= COST_VENDOR_SKILL;
-                        DataBase.Item item = DataBase.ITEMS.get(itemState.getIdItem());
-                        cardInventoryState.get(0).setDurability(item.getDurabilityMax());
-                        return true;
+                    DataBase.Mob mob = DataBase.MOBS.get(mCardTableTargetID);
+                    if (mob.getSubType()==CardTableSubType.BLACKSMITH){
+                        List<CardInventory> cardInventoryState = mInventory.stream().filter(
+                                itemState::equals
+                        ).collect(Collectors.toList());
+                        if (!cardInventoryState.isEmpty()){
+                            mMoney -= COST_VENDOR_SKILL;
+                            DataBase.Item item = DataBase.ITEMS.get(itemState.getIdItem());
+                            cardInventoryState.get(0).setDurability(item.getDurabilityMax());
+                            return true;
+                        }
                     }
+                }
+            }
+        }
+        return false;
+    }
+
+    boolean useSkillInnkeeper(){
+        if (mState == State.TRADE){
+            if (mMoney >= COST_VENDOR_SKILL){
+                DataBase.Mob mob = DataBase.MOBS.get(mCardTableTargetID);
+                if (mob.getSubType()==CardTableSubType.INNKEEPER){
+                    mMoney -= COST_VENDOR_SKILL;
+                    mHP = (byte) (HP_DEFAULT + mStats.getHPBonus());
+                    return true;
                 }
             }
         }

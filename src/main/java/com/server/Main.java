@@ -56,6 +56,7 @@ public class Main {
         server.createContext("/trade/sell", new TradeSell());
         server.createContext("/trade/use/trader", new TradeUseTrader());
         server.createContext("/trade/use/blacksmith", new TradeUseBlacksmith());
+        server.createContext("/trade/use/innkeeper", new TradeUseInnkeeper());
         server.createContext("/trade/exit", new TradeExit());
         server.createContext("/use/spell", new UseSpell());
         server.createContext("/use/food", new UseFood());
@@ -381,6 +382,30 @@ public class Main {
                 }
                 commitTransactionAndSendResponse(t, mapper, session, response);
                 System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop TradeUseBlacksmith");
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class TradeUseInnkeeper implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start TradeUseInnkeeper");
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                Session session = Util.getSessionFactory().openSession();
+                session.beginTransaction();
+                SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
+                Player player = session.load(Player.class, sessionInfo.getIdPlayer());
+                Response response = new Response();
+                if (!player.useSkillInnkeeper()){
+                    response.setError(ResponceErrorCode.CHEAT_OR_BUG);
+                }
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop TradeUseInnkeeper");
             }
             catch (Exception e){
                 e.printStackTrace();
