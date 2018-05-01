@@ -37,7 +37,7 @@ abstract class CardPlayer {
         if (item.getType()==InventoryType.SHIELD ||
                 item.getType()==InventoryType.WEAPON){
             Random random = new Random();
-            mDurability = (byte) ((byte) random.nextInt(DataBase.ITEMS.get(idItem).getDurability())+1);
+            mDurability = (byte) ((byte) random.nextInt(DataBase.ITEMS.get(idItem).getDurabilityMax())+1);
         }
     }
     public CardPlayer(Player player, byte idItem, byte slotId, byte durability) {

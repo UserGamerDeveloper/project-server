@@ -525,6 +525,25 @@ class Player {
         return false;
     }
 
+    boolean useSkillBlacksmith(CardInventory itemState) {
+        if (mState == State.TRADE){
+            if (mMoney >= COST_VENDOR_SKILL){
+                if (itemState.getIdItem()!=0){
+                    List<CardInventory> cardInventoryState = mInventory.stream().filter(
+                            itemState::equals
+                    ).collect(Collectors.toList());
+                    if (!cardInventoryState.isEmpty()){
+                        mMoney -= COST_VENDOR_SKILL;
+                        DataBase.Item item = DataBase.ITEMS.get(itemState.getIdItem());
+                        cardInventoryState.get(0).setDurability(item.getDurabilityMax());
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     boolean exitTrade(){
         if (mState == State.TRADE){
             mTrade.clear();
@@ -822,5 +841,6 @@ class Player {
     public void setTrade(List<CardTrade> trade) {
         mTrade = trade;
     }
+
     //endregion
 }

@@ -78,7 +78,7 @@ public final class DataBase {
         private int mType;
         private byte mGearScore;
         private int mMobGearScore;
-        private byte mDurability;
+        private byte mDurabilityMax;
 
         public byte getID() {
             return mID;
@@ -98,8 +98,8 @@ public final class DataBase {
         public int getMobGearScore() {
             return mMobGearScore;
         }
-        public byte getDurability() {
-            return mDurability;
+        public byte getDurabilityMax() {
+            return mDurabilityMax;
         }
 
         Item(byte ID,byte valueOne, int cost, int type, byte gearScore, int mobGearScore, byte durability) {
@@ -109,7 +109,7 @@ public final class DataBase {
             mType = type;
             mGearScore = gearScore;
             mMobGearScore = mobGearScore;
-            mDurability = durability;
+            mDurabilityMax = durability;
         }
     }
 }

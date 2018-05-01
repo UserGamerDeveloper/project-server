@@ -55,6 +55,7 @@ public class Main {
         server.createContext("/trade/buy", new TradeBuy());
         server.createContext("/trade/sell", new TradeSell());
         server.createContext("/trade/use/trader", new TradeUseTrader());
+        server.createContext("/trade/use/blacksmith", new TradeUseBlacksmith());
         server.createContext("/trade/exit", new TradeExit());
         server.createContext("/use/spell", new UseSpell());
         server.createContext("/use/food", new UseFood());
@@ -355,6 +356,31 @@ public class Main {
                 }
                 commitTransactionAndSendResponse(t, mapper, session, response);
                 System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop TradeUseTrader");
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class TradeUseBlacksmith implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start TradeUseBlacksmith");
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                Session session = Util.getSessionFactory().openSession();
+                session.beginTransaction();
+                SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
+                Player player = session.load(Player.class, sessionInfo.getIdPlayer());
+                Response response = new Response();
+                CardInventory item = mapper.readValue(request.getData(), CardInventory.class);
+                if (!player.useSkillBlacksmith(item)){
+                    response.setError(ResponceErrorCode.CHEAT_OR_BUG);
+                }
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop TradeUseBlacksmith");
             }
             catch (Exception e){
                 e.printStackTrace();
