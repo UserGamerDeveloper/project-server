@@ -32,18 +32,8 @@ import static com.server.Util.getObjectMapper;
 @Entity
 @Table(name="player")
 class Player {
-    private static final float GEAR_SCORE_RANGE_RATE = 0.5f;
-    private static final byte CHANCE_HALT = 6;
-    private static final byte CHANCE_VENDOR = 2;
-    private static final byte CHANCE_CHEST = 2;
-    private static final byte CHANCE_FOOD = 3;
-    private static final byte CHANCE_SPELL = 10;
-    private static final byte CHANCE_WEAPON_OE_SHIELD = 5;
-    private static final byte COST_VENDOR_SKILL = 1;
     private static final byte INVENTORY_MAX_COUNT = 6;
     private static final byte LOOT_AND_TRADECARD_MAX_COUNT = 3;
-    private static final byte HP_DEFAULT = 30;
-    private static final byte CARD_TABLE_MAX_COUNT = 8;
     private static final long LOGIN_COOLDOWN = 60000L;
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
@@ -51,6 +41,9 @@ class Player {
     private int mID;
     @Column(name="email")
     private String mEmail;
+    @OneToOne(fetch = FetchType.EAGER, cascade= CascadeType.ALL)
+    @JoinColumn(name="idBalance", nullable = false)
+    private Balance mBalance;
     @Column(name="hp")
     private byte mHP;
     @Column(name="state")
@@ -104,14 +97,13 @@ class Player {
     @Transient
     private short mTopGearScoreWeaponOrShieldInInventory;
     @Transient
-    private List<DataBase.Mob> mMobList;
+    private List<Mob> mMobList;
 
     Player(String email){
         mEmail = email;
         mState = State.NONE;
         mMoneyBank = 0;
         mMoney = 0;
-        mHP = HP_DEFAULT;
         mIsLogin = true;
         mStats = new Stats();
     }
@@ -130,7 +122,7 @@ class Player {
         mCardTable3 = getCardTable();
         mCardTable4 = getCardTable();
         mCardTable6 = getCardTable();
-        mHP = (byte) (HP_DEFAULT + mStats.getHPBonus());
+        mHP = (byte) (mBalance.getHP_DEFAULT() + mStats.getHPBonus());
         ObjectMapper mapper = new ObjectMapper();
         String response = mapper.writeValueAsString(getStartCardTable());
         System.out.println("getStartResponse: "+response);
@@ -139,7 +131,7 @@ class Player {
 
     String getSetTargetResponse() throws JsonProcessingException {
         String responseStr = null;
-        DataBase.Mob mob = DataBase.MOBS.get(mCardTableTargetID);
+        Mob mob = DataBase.getMobs().get(mCardTableTargetID);
         switch (mob.getType()){
             case CardTableType.MOB:{
                 mState = State.COMBAT;
@@ -249,20 +241,20 @@ class Player {
             if (checkStartInventory(startItemId)){
                 mGearScore = mStats.getGearScoreBonus();
                 mInventory.add(new CardInventory(this, startItemId[4], (byte)4, (byte) 0));
-                mGearScoreWeaponOrShieldInInventory.add(DataBase.ITEMS.get(startItemId[4]).getGearScore());
-                mGearScore += DataBase.ITEMS.get(startItemId[4]).getGearScore();
+                mGearScoreWeaponOrShieldInInventory.add(DataBase.getItems().get(startItemId[4]).getGearScore());
+                mGearScore += DataBase.getItems().get(startItemId[4]).getGearScore();
                 mInventory.add(new CardInventory(this, startItemId[5], (byte)5, (byte) 0));
-                mGearScoreWeaponOrShieldInInventory.add(DataBase.ITEMS.get(startItemId[5]).getGearScore());
-                mGearScore += DataBase.ITEMS.get(startItemId[5]).getGearScore();
+                mGearScoreWeaponOrShieldInInventory.add(DataBase.getItems().get(startItemId[5]).getGearScore());
+                mGearScore += DataBase.getItems().get(startItemId[5]).getGearScore();
                 for (byte i = 0; i<INVENTORY_MAX_COUNT; i++) {
                     if (startItemId[i]!=null){
                         mInventory.add(new CardInventory(this, startItemId[i], i));
-                        if (DataBase.ITEMS.get(startItemId[i]).getType()==InventoryType.SHIELD ||
-                                DataBase.ITEMS.get(startItemId[i]).getType() == InventoryType.WEAPON)
+                        if (DataBase.getItems().get(startItemId[i]).getType()==InventoryType.SHIELD ||
+                                DataBase.getItems().get(startItemId[i]).getType() == InventoryType.WEAPON)
                         {
                             mGearScore += getChangeGearScoreAfterReplace(
                                     null,
-                                    DataBase.ITEMS.get(startItemId[i]).getGearScore()
+                                    DataBase.getItems().get(startItemId[i]).getGearScore()
                             );
                         }
                     }
@@ -316,8 +308,8 @@ class Player {
 
     boolean damage(CardInventory[] hands){
         if (mState == State.COMBAT){
-            DataBase.Item handOne = DataBase.ITEMS.get(hands[0].getIdItem());
-            DataBase.Item handTwo = DataBase.ITEMS.get(hands[1].getIdItem());
+            Item handOne = DataBase.getItems().get(hands[0].getIdItem());
+            Item handTwo = DataBase.getItems().get(hands[1].getIdItem());
             if ((handOne.getType()==InventoryType.WEAPON || handOne.getType()==InventoryType.SHIELD) &&
                     (handTwo.getType()==InventoryType.WEAPON || handTwo.getType()==InventoryType.SHIELD))
             {
@@ -331,7 +323,7 @@ class Player {
                     ).collect(Collectors.toList());
                     System.out.println("handTwoState.get(0).toString() " + handTwoState.get(0).toString());
                     if (!handTwoState.isEmpty()){
-                        DataBase.Mob mobTarget = DataBase.MOBS.get(mCardTableTargetID);
+                        Mob mobTarget = DataBase.getMobs().get(mCardTableTargetID);
                         int mobDamage = mobTarget.getValueOne();
                         if(mobDamage > 0 && handOne.getType() == InventoryType.SHIELD){
                             if (handOne.getValueOne() < mobDamage){
@@ -413,7 +405,7 @@ class Player {
     boolean buy(CardTrade cardTrade){
         if (mState == State.TRADE){
             if (mInventory.size() < INVENTORY_MAX_COUNT){
-                DataBase.Item item = DataBase.ITEMS.get(cardTrade.getIdItem());
+                Item item = DataBase.getItems().get(cardTrade.getIdItem());
                 if (mMoney >= item.getCost()){
                     List<CardTrade> cardTradeState = mTrade.stream().filter(
                             cardTrade::equals
@@ -438,7 +430,7 @@ class Player {
                 ).collect(Collectors.toList());
                 if (!cardInventoryState.isEmpty()){
                     mInventory.remove(cardInventoryState.get(0));
-                    DataBase.Item item = DataBase.ITEMS.get(cardInventory.getIdItem());
+                    Item item = DataBase.getItems().get(cardInventory.getIdItem());
                     mMoney += item.getCost();
                     return true;
                 }
@@ -449,10 +441,10 @@ class Player {
 
     boolean useSkillTrader(){
         if (mState == State.TRADE){
-            if (mMoney >= COST_VENDOR_SKILL){
-                DataBase.Mob mob = DataBase.MOBS.get(mCardTableTargetID);
+            if (mMoney >= mBalance.getCOST_VENDOR_SKILL()){
+                Mob mob = DataBase.getMobs().get(mCardTableTargetID);
                 if (mob.getSubType()==CardTableSubType.TRADER){
-                    mMoney -= COST_VENDOR_SKILL;
+                    mMoney -= mBalance.getCOST_VENDOR_SKILL();
                     mTrade.clear();
                     Random random = Util.getRandom();
                     for (byte i = 0; i < LOOT_AND_TRADECARD_MAX_COUNT; i++) {
@@ -468,16 +460,16 @@ class Player {
 
     boolean useSkillBlacksmith(CardInventory itemState) {
         if (mState == State.TRADE){
-            if (mMoney >= COST_VENDOR_SKILL){
+            if (mMoney >= mBalance.getCOST_VENDOR_SKILL()){
                 if (itemState.getIdItem()!=0){
-                    DataBase.Mob mob = DataBase.MOBS.get(mCardTableTargetID);
+                    Mob mob = DataBase.getMobs().get(mCardTableTargetID);
                     if (mob.getSubType()==CardTableSubType.BLACKSMITH){
                         List<CardInventory> cardInventoryState = mInventory.stream().filter(
                                 itemState::equals
                         ).collect(Collectors.toList());
                         if (!cardInventoryState.isEmpty()){
-                            mMoney -= COST_VENDOR_SKILL;
-                            DataBase.Item item = DataBase.ITEMS.get(itemState.getIdItem());
+                            mMoney -= mBalance.getCOST_VENDOR_SKILL();
+                            Item item = DataBase.getItems().get(itemState.getIdItem());
                             cardInventoryState.get(0).setDurability(item.getDurabilityMax());
                             return true;
                         }
@@ -490,11 +482,11 @@ class Player {
 
     boolean useSkillInnkeeper(){
         if (mState == State.TRADE){
-            if (mMoney >= COST_VENDOR_SKILL){
-                DataBase.Mob mob = DataBase.MOBS.get(mCardTableTargetID);
+            if (mMoney >= mBalance.getCOST_VENDOR_SKILL()){
+                Mob mob = DataBase.getMobs().get(mCardTableTargetID);
                 if (mob.getSubType()==CardTableSubType.INNKEEPER){
-                    mMoney -= COST_VENDOR_SKILL;
-                    mHP = (byte) (HP_DEFAULT + mStats.getHPBonus());
+                    mMoney -= mBalance.getCOST_VENDOR_SKILL();
+                    mHP = (byte) (mBalance.getHP_DEFAULT() + mStats.getHPBonus());
                     return true;
                 }
             }
@@ -512,7 +504,7 @@ class Player {
     }
 
     boolean useFood(byte itemID) {
-        DataBase.Item item = DataBase.ITEMS.get(itemID);
+        Item item = DataBase.getItems().get(itemID);
         if (item.getType()==InventoryType.FOOD){
             List<CardPlayer> itemList;
             if (mState==State.SELECT_LOOT){
@@ -544,14 +536,14 @@ class Player {
                 item -> item.getIdItem() == itemID
         ).collect(Collectors.toList());
         if (!itemList.isEmpty()){
-            DataBase.Item item = DataBase.ITEMS.get(itemID);
+            Item item = DataBase.getItems().get(itemID);
             if (item.getType()==InventoryType.SPELL){
                 if (mState == State.COMBAT){
                     mCardTableTargetHP = (byte)(mCardTableTargetHP-item.getValueOne());
                     mGearScore -= item.getGearScore();
                     mInventory.remove(itemList.get(0));
                     if (mCardTableTargetHP<1){
-                        deadMob(DataBase.MOBS.get(mCardTableTargetID));
+                        deadMob(DataBase.getMobs().get(mCardTableTargetID));
                     }
                     return true;
                 }
@@ -615,7 +607,7 @@ class Player {
 
     private void tryPickingLoot() {
         while (!mLoot.isEmpty() && mInventory.size() < INVENTORY_MAX_COUNT) {
-            DataBase.Item item = DataBase.ITEMS.get(mLoot.get(0).getIdItem());
+            Item item = DataBase.getItems().get(mLoot.get(0).getIdItem());
             if (item.getType()== InventoryType.WEAPON ||
                     item.getType()== InventoryType.SHIELD)
             {
@@ -632,7 +624,7 @@ class Player {
         }
     }
 
-    private void deadMob(DataBase.Mob mobTarget) {
+    private void deadMob(Mob mobTarget) {
         mState = State.SELECT_LOOT;
         mMoney += mobTarget.getMoney();
         mStats.addExperience(mobTarget.getExperience());
@@ -641,14 +633,14 @@ class Player {
 
     private void generateLoot() {
         int[] typeLoot = new int[3];
-        DataBase.Mob mob = DataBase.MOBS.get(mCardTableTargetID);
+        Mob mob = DataBase.getMobs().get(mCardTableTargetID);
         mCardTableTargetID = null;
         mCardTableTargetHP = null;
         Random random = new Random();
         int lootCount = 0;
         if (mob.getType()==CardTableType.MOB){
             if (mob.getSubType()!=CardTableSubType.FOREST){
-                if (random.nextInt(CHANCE_WEAPON_OE_SHIELD)==0){
+                if (random.nextInt(mBalance.getCHANCE_WEAPON_OE_SHIELD())==0){
                     if (random.nextBoolean()){
                         typeLoot[lootCount]=InventoryType.WEAPON;
                     }
@@ -657,11 +649,11 @@ class Player {
                     }
                     lootCount++;
                 }
-                if (random.nextInt(CHANCE_FOOD)==0){
+                if (random.nextInt(mBalance.getCHANCE_FOOD())==0){
                     typeLoot[lootCount]= InventoryType.FOOD;
                     lootCount++;
                 }
-                if (random.nextInt(CHANCE_SPELL)==0){
+                if (random.nextInt(mBalance.getCHANCE_SPELL())==0){
                     typeLoot[lootCount]= InventoryType.SPELL;
                     lootCount++;
                 }
@@ -681,7 +673,7 @@ class Player {
 
     private byte getCardLoot(byte type) {
         Random random = new Random();
-        List<DataBase.Item> itemList = DataBase.ITEMS.values().stream().filter(
+        List<Item> itemList = DataBase.getItems().values().stream().filter(
                 item -> (item.getMobGearScore() <= mGearScore) && (item.getType() == type)
         ).collect(Collectors.toList());;
         return itemList.get(random.nextInt(itemList.size())).getID();
@@ -698,9 +690,9 @@ class Player {
 
     private byte getCardTable() {
         Random random = new Random();
-        boolean chest = random.nextInt(CHANCE_CHEST)==0;
+        boolean chest = random.nextInt(mBalance.getCHANCE_CHEST())==0;
         boolean halt = false;
-        boolean vendor = false;
+        boolean vendor = random.nextInt(mBalance.getCHANCE_VENDOR())==0;
 /*
         boolean vendor = random.nextInt(CHANCE_VENDOR)==0;
         boolean chest = random.nextInt(CHANCE_CHEST)==0;
@@ -761,7 +753,7 @@ class Player {
     private short getChangeGearScoreAfterReplace(Byte remove, Byte add) {
         for (CardInventory itemState :
                 mInventory) {
-            DataBase.Item item = DataBase.ITEMS.get(itemState.getIdItem());
+            Item item = DataBase.getItems().get(itemState.getIdItem());
             if (item.getType()==InventoryType.WEAPON ||
                     item.getType()==InventoryType.SHIELD){
                 mGearScoreWeaponOrShieldInInventory.add(item.getGearScore());
@@ -787,11 +779,11 @@ class Player {
 
     private boolean checkStartInventory(Byte[] startItemId){
         short startItemCost = 0;
-        startItemCost += DataBase.ITEMS.get(startItemId[4]).getCost();
-        startItemCost += DataBase.ITEMS.get(startItemId[5]).getCost();
+        startItemCost += DataBase.getItems().get(startItemId[4]).getCost();
+        startItemCost += DataBase.getItems().get(startItemId[5]).getCost();
         for (byte i = 0; i<INVENTORY_MAX_COUNT; i++) {
             if (startItemId[i]!=null){
-                startItemCost += DataBase.ITEMS.get(startItemId[i]).getCost();
+                startItemCost += DataBase.getItems().get(startItemId[i]).getCost();
             }
             else{
                 break;
@@ -811,8 +803,16 @@ class Player {
         mLoginTime = loginTime;
     }
     @JsonIgnore
-    private List<DataBase.Mob> getMobsList() {
-        return DataBase.MOBS.values().stream().filter(
+    public Balance getBalance() {
+        return mBalance;
+    }
+    @JsonIgnore
+    public void setBalance(Balance balance) {
+        mBalance = balance;
+    }
+    @JsonIgnore
+    private List<Mob> getMobsList() {
+        return DataBase.getMobs().values().stream().filter(
                 mob -> (mob.getGearScore() <= mGearScore) /*&&
                         (mob.getGearScore() >= mGearScore*GEAR_SCORE_RANGE_RATE)*/
         ).collect(Collectors.toList());

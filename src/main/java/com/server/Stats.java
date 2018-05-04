@@ -38,11 +38,6 @@ class Stats {
         }
     }
 
-    private final static float[] REQUIREMENT_EXPERIENCE = {10, 20, 30, 1000, 1000, 1000, 1000,
-            1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
-    private final static byte GEAR_SCORE_PER_STAT = 1;
-    private final static byte HP_BONUS_PER_STAT = 1;
-    private final static short RESET_COST = 1;
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     @Column(name="id")
@@ -92,8 +87,8 @@ class Stats {
 
     void addExperience(int experience) {
         mExperienceValue += experience;
-        if (mExperienceValue >= REQUIREMENT_EXPERIENCE[mLevel]) {
-            mExperienceValue -= REQUIREMENT_EXPERIENCE[mLevel];
+        if (mExperienceValue >= mPlayer.getBalance().getREQUIREMENT_EXPERIENCE()[mLevel]) {
+            mExperienceValue -= mPlayer.getBalance().getREQUIREMENT_EXPERIENCE()[mLevel];
             mLevel++;
             mPoints++;
         }
@@ -143,8 +138,8 @@ class Stats {
 
     boolean reset() {
         if (mPlayer.getState()!=State.NONE){
-            if (mPlayer.getMoneyBank()>=RESET_COST){
-                mPlayer.changeMoneyBank(-RESET_COST);
+            if (mPlayer.getMoneyBank()>=mPlayer.getBalance().getRESET_COST()){
+                mPlayer.changeMoneyBank(-mPlayer.getBalance().getRESET_COST());
                 mPoints = mLevel;
                 mDamagePoints = 0;
                 mDefencePoints = 0;
@@ -156,7 +151,7 @@ class Stats {
     }
 
     int getGearScoreBonus() {
-        return (mHPPoints + mDamagePoints + mDefencePoints) * GEAR_SCORE_PER_STAT;
+        return (mHPPoints + mDamagePoints + mDefencePoints) * mPlayer.getBalance().getGEAR_SCORE_PER_STAT();
     }
 
     int getDamageBonus() {
@@ -168,6 +163,6 @@ class Stats {
     }
 
     int getHPBonus() {
-        return mHPPoints * HP_BONUS_PER_STAT;
+        return mHPPoints * mPlayer.getBalance().getHP_BONUS_PER_STAT();
     }
 }

@@ -33,7 +33,7 @@ abstract class CardPlayer {
         mPlayer = player;
         mIdItem = idItem;
         mSlotId = slotId;
-        DataBase.Item item = DataBase.ITEMS.get(idItem);
+        Item item = DataBase.ITEMS.get(idItem);
         if (item.getType()==InventoryType.SHIELD ||
                 item.getType()==InventoryType.WEAPON){
             Random random = new Random();

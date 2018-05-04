@@ -62,6 +62,7 @@ public class Main {
         server.createContext("/use/food", new UseFood());
         server.createContext("/stats/confirm", new StatsConfirm());
         server.createContext("/stats/reset", new StatsReset());
+        server.createContext("/test", new Test());
         server.setExecutor(directExecutor);
         server.start();
         System.out.println("Start server");
@@ -546,6 +547,74 @@ public class Main {
                 System.out.println(
                         new Date() +" Thread " + Thread.currentThread().getId() + " stop stats/reset"
                 );
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class Test implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start Test");
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                Session session = Util.getSessionFactory().openSession();
+                session.beginTransaction();
+                Response response = new Response();
+                BalanceRequest balanceRequest = mapper.readValue(request.getData(), BalanceRequest.class);
+                String sql = null;
+                switch (balanceRequest.getBase()){
+                    case "3":
+                    case "0":{
+                        if (balanceRequest.getParam().equals("GSRR")){
+                            sql = String.format(
+                                    "UPDATE %s SET %s='%f'",
+                                    "balance",
+                                    balanceRequest.getParam(),
+                                    Float.valueOf(balanceRequest.getValue())/100
+                            );
+                        }
+                        else{
+                            sql = String.format(
+                                    "UPDATE %s SET %s='%s'",
+                                    "balance",
+                                    balanceRequest.getParam(),
+                                    balanceRequest.getValue()
+                            );
+                        }
+                        break;
+                    }
+                    case "1":{
+                        sql = String.format(
+                                "UPDATE %s SET %s='%s' WHERE id='%s'",
+                                "mobs",
+                                balanceRequest.getParam(),
+                                balanceRequest.getValue(),
+                                balanceRequest.getId()
+                        );
+                        break;
+                    }
+                    case "2":{
+                        sql = String.format(
+                                "UPDATE %s SET %s='%s' WHERE id='%s'",
+                                "items",
+                                balanceRequest.getParam(),
+                                balanceRequest.getValue(),
+                                balanceRequest.getId()
+                        );
+                        break;
+                    }
+                    default:{
+                        response.setError(ResponceErrorCode.CHEAT_OR_BUG);
+                        break;
+                    }
+                }
+                session.createNativeQuery(sql).executeUpdate();
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop Test");
             }
             catch (Exception e){
                 e.printStackTrace();

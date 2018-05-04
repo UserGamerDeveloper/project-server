@@ -41,6 +41,9 @@
         <mapping class="com.server.CardInventory"/>
         <mapping class="com.server.CardHand"/>
         <mapping class="com.server.CardTrade"/>
+        <mapping class="com.server.Balance"/>
+        <mapping class="com.server.Mob"/>
+        <mapping class="com.server.Item"/>
 
     </session-factory>
 
