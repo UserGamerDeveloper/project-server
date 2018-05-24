@@ -123,7 +123,7 @@ public class Main {
                                 SessionInfo.class
                         ).getResultList().get(0);
                         session.delete(sessionInfo);
-                        if (player.isLoginCooldown()){
+                        if (player.isLoginCoolDown()){
                             sessionInfo.setKey(request.getKey());
                             session.save(sessionInfo);
                             player.setLoginTime(new Timestamp(new Date().getTime()));
@@ -137,7 +137,7 @@ public class Main {
                         }
                     }
                     else{
-                        if (player.isLoginCooldown()){
+                        if (player.isLoginCoolDown()){
                             SessionInfo sessionInfo = new SessionInfo(player.getID(),request.getKey());
                             session.save(sessionInfo);
                             player.setLogin(true);
@@ -149,6 +149,7 @@ public class Main {
                             response.setError(ResponceErrorCode.LOGIN_COOLDOWN);
                         }
                     }
+                    response.setGearScore(player.getGearScore());
                 }
                 else {
                         if (payload.getEmailVerified()){
@@ -187,6 +188,7 @@ public class Main {
                 Response response = new Response();
                 if (player.setStartInventory(startItemId)){
                     response.setData(player.getStartResponse());
+                    response.setGearScore(player.getGearScore());
                 }
                 else{
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);
@@ -245,8 +247,9 @@ public class Main {
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
                 Response response = new Response();
-                if (player.damage(hands)){
+                if (player.damageCheck(hands)){
                     response.setData(player.getDamageResponse());
+                    response.setGearScore(player.getGearScore());
                 }
                 else{
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);
@@ -275,6 +278,7 @@ public class Main {
                 Response response = new Response();
                 if (player.selectLoot(inventory)){
                     response.setData(player.getContinueResponse());
+                    response.setGearScore(player.getGearScore());
                 }
                 else{
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);
@@ -304,6 +308,7 @@ public class Main {
                 if (!player.buy(item)){
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);
                 }
+                response.setGearScore(player.getGearScore());
                 commitTransactionAndSendResponse(t, mapper, session, response);
                 System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop TradeBuy");
             }
@@ -329,6 +334,7 @@ public class Main {
                 if (!player.sell(item)){
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);
                 }
+                response.setGearScore(player.getGearScore());
                 commitTransactionAndSendResponse(t, mapper, session, response);
                 System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop TradeSell");
             }
@@ -456,6 +462,7 @@ public class Main {
                 Response response = new Response();
                 if (player.useSpell(itemID)){
                     response.setData(player.getDamageResponse());
+                    response.setGearScore(player.getGearScore());
                 }
                 else{
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);
@@ -484,6 +491,7 @@ public class Main {
                 Response response = new Response();
                 if (player.useFood(itemID)){
                     response.setData(player.getUseFoodResponse());
+                    response.setGearScore(player.getGearScore());
                 }
                 else{
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);

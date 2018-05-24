@@ -18,15 +18,15 @@ class Mob {
     private int mValueOne;
     @Column(name="VT")
     private byte mValueTwo;
-    @Column(name="MN")
+    @Column(name="M")
     private int mMoney;
     @Column(name="T")
     private int mType;
-    @Column(name="GS")
+    @Column(name="G")
     private int mGearScore;
-    @Column(name="ST")
+    @Column(name="S")
     private int mSubType;
-    @Column(name="EXP")
+    @Column(name="E")
     private int mExperience;
 
     Mob(){}

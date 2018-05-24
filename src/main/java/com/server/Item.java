@@ -16,16 +16,16 @@ class Item {
     private byte mID;
     @Column(name="VO")
     private byte mValueOne;
-    @Column(name="COST")
-    private int mCost;
     @Column(name="T")
     private int mType;
-    @Column(name="GS")
-    private byte mGearScore;
-    @Column(name="MGS")
-    private int mMobGearScore;
-    @Column(name="DM")
+    @Column(name="D")
     private byte mDurabilityMax;
+    @Column(name="G")
+    private byte mGearScore;
+    @Column(name="MG")
+    private int mMobGearScore;
+    @Column(name="C")
+    private int mCost;
 
     public byte getID() {
         return mID;
@@ -47,6 +47,9 @@ class Item {
     }
     public byte getDurabilityMax() {
         return mDurabilityMax;
+    }
+    boolean isWeaponOrShield(){
+        return mType == InventoryType.SHIELD || mType == InventoryType.WEAPON;
     }
 
     Item(){}

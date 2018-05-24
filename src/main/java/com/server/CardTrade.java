@@ -7,8 +7,8 @@ import javax.persistence.Table;
 @Table(name="trade")
 public class CardTrade extends CardPlayer{
 
-    public CardTrade(Player player, byte idItem, byte slotId) {
-        super(player, idItem, slotId);
+    public CardTrade(Player player, byte idItem, byte slotId, boolean durabilityMax) {
+        super(player, idItem, slotId, durabilityMax);
     }
 
     public CardTrade(Player player, byte idItem, byte slotId, byte durability) {

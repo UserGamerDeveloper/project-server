@@ -15,6 +15,7 @@ import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
 abstract class CardPlayer {
+    static final byte ID_FIST = 1;
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     @Column(name="id")
@@ -29,15 +30,20 @@ abstract class CardPlayer {
     @JoinColumn(name = "idPlayer", nullable = false)
     private Player mPlayer;
 
-    public CardPlayer(Player player, byte idItem, byte slotId) {
+    public CardPlayer(Player player, byte idItem, byte slotId, boolean durabilityMax) {
         mPlayer = player;
         mIdItem = idItem;
         mSlotId = slotId;
-        Item item = DataBase.ITEMS.get(idItem);
+        Item item = DataBase.getItems().get(idItem);
         if (item.getType()==InventoryType.SHIELD ||
                 item.getType()==InventoryType.WEAPON){
-            Random random = new Random();
-            mDurability = (byte) ((byte) random.nextInt(DataBase.ITEMS.get(idItem).getDurabilityMax())+1);
+            if (durabilityMax){
+                mDurability = item.getDurabilityMax();
+            }
+            else{
+                Random random = new Random();
+                mDurability = (byte) ((byte) random.nextInt(DataBase.getItems().get(idItem).getDurabilityMax())+1);
+            }
         }
     }
     public CardPlayer(Player player, byte idItem, byte slotId, byte durability) {
@@ -57,7 +63,9 @@ abstract class CardPlayer {
     void decrementDurability(){
         mDurability--;
         if (mDurability<1){
-            mIdItem = 0;
+            mPlayer.getInventory().remove(this);
+            Item item = DataBase.getItems().get(mIdItem);
+            mPlayer.tryChangeGearScore(item);
         }
     }
 
@@ -88,6 +96,15 @@ abstract class CardPlayer {
     }
     void setDurability(byte durability){
         this.mDurability = durability;
+    }
+
+    boolean isFist(){
+        return mIdItem == ID_FIST;
+    }
+
+    boolean isWeaponOrShield(){
+        Item item = DataBase.getItems().get(mIdItem);
+        return item.getType()==InventoryType.WEAPON || item.getType()==InventoryType.SHIELD;
     }
 
     @Override

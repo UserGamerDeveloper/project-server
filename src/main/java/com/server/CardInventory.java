@@ -7,8 +7,8 @@ import javax.persistence.Table;
 @Table(name="inventory")
 public class CardInventory extends CardPlayer{
     public CardInventory() {}
-    public CardInventory(Player player, byte idItem, byte slotId) {
-        super(player, idItem, slotId);
+    public CardInventory(Player player, byte idItem, byte slotId, boolean durabilityMax) {
+        super(player, idItem, slotId, durabilityMax);
     }
     public CardInventory(Player player, byte idItem, byte slotId, byte durability) {
         super(player, idItem, slotId, durability);

@@ -3,6 +3,14 @@ package com.server;
 public class Response {
     private String data;
     private Byte error;
+    private Integer mGearScore;
+
+    public Integer getGearScore() {
+        return mGearScore;
+    }
+    public void setGearScore(Integer gearScore) {
+        mGearScore = gearScore;
+    }
 
     public String getData() {
         return data;
