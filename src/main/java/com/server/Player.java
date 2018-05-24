@@ -247,12 +247,12 @@ class Player {
                 mGearScore = mStats.getGearScoreBonus();
                 ArrayList<Byte> gearScoreWeaponOrShieldInInventory = new ArrayList<>();
                 Item handOne = DataBase.getItems().get(startItemId[4]);
-                if (startItemId[4]!=0){
+                if (startItemId[4]!=1){
                     mInventory.add(new CardInventory(this, startItemId[4], (byte)4, handOne.getDurabilityMax()));
                 }
                 gearScoreWeaponOrShieldInInventory.add(handOne.getGearScore());
                 Item handTwo = DataBase.getItems().get(startItemId[5]);
-                if (startItemId[5]!=0){
+                if (startItemId[5]!=1){
                     mInventory.add(new CardInventory(this, startItemId[5], (byte)5, handTwo.getDurabilityMax()));
                 }
                 gearScoreWeaponOrShieldInInventory.add(handTwo.getGearScore());
@@ -439,8 +439,6 @@ class Player {
         if (mState == State.SELECT_LOOT){
             List<CardInventory> inventoryList = Arrays.asList(inventory);
             ArrayList<CardPlayer> invetoryAndLoot = new ArrayList<>();
-            invetoryAndLoot.add(new CardInventory(this,(byte)1,(byte)4,(byte)0));
-            invetoryAndLoot.add(new CardInventory(this,(byte)1,(byte)5,(byte)0));
             invetoryAndLoot.addAll(mInventory);
             invetoryAndLoot.addAll(mLoot);
             for (CardPlayer cardPlayer : invetoryAndLoot) {
@@ -675,19 +673,23 @@ class Player {
         for (CardInventory item :mInventory) {
             inventory[item.getSlotId()] = item;
         }
-        for (int i = 0; mInventory.size() < INVENTORY_MAX_COUNT; i++){
+        for (byte i = 0; mInventory.size() < INVENTORY_MAX_COUNT; i++){
             if (!mLoot.isEmpty() && i < INVENTORY_MAX_COUNT){
                 if (inventory[i]==null){
                     Item item = DataBase.getItems().get(mLoot.get(0).getIdItem());
                     if (i==4 || i==5){
                         if (item.isWeaponOrShield()){
-                            mInventory.add(new CardInventory(mLoot.get(0)));
+                            CardLoot loot = mLoot.get(0);
+                            loot.setSlotId(i);
+                            mInventory.add(new CardInventory(loot));
                             mLoot.remove(0);
                             tryChangeGearScore(item);
                         }
                     }
                     else{
-                        mInventory.add(new CardInventory(mLoot.get(0)));
+                        CardLoot loot = mLoot.get(0);
+                        loot.setSlotId(i);
+                        mInventory.add(new CardInventory(loot));
                         mLoot.remove(0);
                         tryChangeGearScore(item);
                     }
