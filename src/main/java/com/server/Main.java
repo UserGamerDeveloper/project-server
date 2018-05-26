@@ -63,6 +63,8 @@ public class Main {
         server.createContext("/stats/confirm", new StatsConfirm());
         server.createContext("/stats/reset", new StatsReset());
         server.createContext("/test", new Test());
+        server.createContext("/dead", new Dead());
+        server.createContext("/reset", new Reset());
         server.setExecutor(directExecutor);
         server.start();
         System.out.println("Start server");
@@ -623,6 +625,58 @@ public class Main {
                 session.createNativeQuery(sql).executeUpdate();
                 commitTransactionAndSendResponse(t, mapper, session, response);
                 System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop Test");
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class Dead implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(
+                        new Date() + " Thread " + Thread.currentThread().getId() + " start dead"
+                );
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                Session session = Util.getSessionFactory().openSession();
+                session.beginTransaction();
+                SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
+                Player player = session.load(Player.class, sessionInfo.getIdPlayer());
+                Response response = new Response();
+                player.dead();
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(
+                        new Date() +" Thread " + Thread.currentThread().getId() + " stop dead"
+                );
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class Reset implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(
+                        new Date() + " Thread " + Thread.currentThread().getId() + " start reset"
+                );
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                Session session = Util.getSessionFactory().openSession();
+                session.beginTransaction();
+                SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
+                Player player = session.load(Player.class, sessionInfo.getIdPlayer());
+                Response response = new Response();
+                player.reset();
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(
+                        new Date() +" Thread " + Thread.currentThread().getId() + " stop reset"
+                );
             }
             catch (Exception e){
                 e.printStackTrace();

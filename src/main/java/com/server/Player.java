@@ -398,14 +398,7 @@ class Player {
         }
 
         if (mHP < 1) {
-            mState = State.NONE;
-            mHP = 0;
-            mMoneyBank += mMoney;
-            mMoney = 0;
-            mInventory.clear();
-            mGearScore = 0;
-            mTopTwoGearScoreWeaponOrShieldInInventory = 0;
-            mTopOneGearScoreWeaponOrShieldInInventory = 0;
+            dead();
             return;
         }
 
@@ -433,6 +426,25 @@ class Player {
         if (mCardTableTargetHP<1){
             deadMob(mobTarget);
         }
+    }
+
+    void reset() {
+        mState = State.NONE;
+        mMoneyBank = 0;
+        mMoney = 0;
+        mStats = new Stats();
+        mInventory.clear();
+    }
+
+    void dead() {
+        mState = State.NONE;
+        mHP = 0;
+        mMoneyBank += mMoney/2;
+        mMoney = 0;
+        mInventory.clear();
+        mGearScore = 0;
+        mTopTwoGearScoreWeaponOrShieldInInventory = 0;
+        mTopOneGearScoreWeaponOrShieldInInventory = 0;
     }
 
     boolean selectLoot(CardInventory[] inventory){
