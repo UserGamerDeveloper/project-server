@@ -96,6 +96,8 @@ class Player {
     private byte mTopOneGearScoreWeaponOrShieldInInventory;
     @Column(name="topTwoGearScoreWeaponOrShieldInInventory")
     private byte mTopTwoGearScoreWeaponOrShieldInInventory;
+    @Column(name="costVendorSkill")
+    private Integer mCostVendorSkill;
     @Transient
     private List<Mob> mMobList;
 
@@ -148,7 +150,8 @@ class Player {
                             mTrade.add(new CardTrade(this, getCardLoot((byte)random.nextInt(4)), i, false));
                             System.out.println("trader: "+mTrade.get(i).toString());
                         }
-                        responceTrade.setSkillCost(mGearScore);
+                        mCostVendorSkill = mGearScore;
+                        responceTrade.setSkillCost(mCostVendorSkill);
                         break;
                     }
                     case CardTableSubType.BLACKSMITH:{
@@ -168,7 +171,8 @@ class Player {
                             mTrade.add(new CardTrade(this, getCardLoot(InventoryType.FOOD), i, false));
                             System.out.println("INNKEEPER: "+mTrade.get(i).toString());
                         }
-                        responceTrade.setSkillCost(mGearScore);
+                        mCostVendorSkill = mGearScore;
+                        responceTrade.setSkillCost(mCostVendorSkill);
                         break;
                     }
                 }
@@ -522,7 +526,7 @@ class Player {
             if (mMoney >= mBalance.getCOST_VENDOR_SKILL()){
                 Mob mob = DataBase.getMobs().get(mCardTableTargetID);
                 if (mob.getSubType()==CardTableSubType.TRADER){
-                    mMoney -= mBalance.getCOST_VENDOR_SKILL();
+                    mMoney -= mCostVendorSkill;
                     mTrade.clear();
                     Random random = Util.getRandom();
                     for (byte i = 0; i < LOOT_AND_TRADECARD_MAX_COUNT; i++) {
@@ -563,7 +567,7 @@ class Player {
             if (mMoney >= mBalance.getCOST_VENDOR_SKILL()){
                 Mob mob = DataBase.getMobs().get(mCardTableTargetID);
                 if (mob.getSubType()==CardTableSubType.INNKEEPER){
-                    mMoney -= mBalance.getCOST_VENDOR_SKILL();
+                    mMoney -= mCostVendorSkill;
                     mHP = (byte) (mBalance.getHP_DEFAULT() + mStats.getHPBonus());
                     return true;
                 }
@@ -978,6 +982,9 @@ class Player {
     }
     public List<CardLoot> getLoot() {
         return mLoot;
+    }
+    public Integer getCostVendorSkill() {
+        return mCostVendorSkill;
     }
     public Stats getStats() {
         return mStats;
