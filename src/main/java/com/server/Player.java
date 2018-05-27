@@ -479,12 +479,13 @@ class Player {
             if (mInventory.size() < INVENTORY_MAX_COUNT){
                 Item item = DataBase.getItems().get(cardTrade.getIdItem());
                 if (mMoney >= item.getCost()){
-                    List<CardTrade> cardTradeState = mTrade.stream().filter(
+                    List<CardTrade> cardTradeStateList = mTrade.stream().filter(
                             cardTrade::equals
                     ).collect(Collectors.toList());
-                    if (!cardTradeState.isEmpty()){
-                        cardTrade = cardTradeState.get(0);
-                        mInventory.add(new CardInventory(cardTrade));
+                    if (!cardTradeStateList.isEmpty()){
+                        CardTrade cardTradeState = cardTradeStateList.get(0);
+                        cardTradeState.setSlotId(cardTrade.getSlotId());
+                        mInventory.add(new CardInventory(cardTradeState));
                         mTrade.remove(cardTrade);
                         tryChangeGearScore(item);
                         return true;
