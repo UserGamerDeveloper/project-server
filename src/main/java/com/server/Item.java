@@ -33,8 +33,11 @@ class Item {
     public byte getValueOne() {
         return mValueOne;
     }
-    public int getCost() {
+    public int getBuyCost() {
         return mCost;
+    }
+    public int getSellCost() {
+        return mCost/2;
     }
     public int getType() {
         return mType;

@@ -141,12 +141,14 @@ class Player {
             case CardTableType.VENDOR:{
                 mState = State.TRADE;
                 Random random = com.server.Util.getRandom();
+                ResponceTrade responceTrade = new ResponceTrade();
                 switch (mob.getSubType()){
                     case CardTableSubType.TRADER:{
                         for (byte i = 0; i < LOOT_AND_TRADECARD_MAX_COUNT; i++) {
                             mTrade.add(new CardTrade(this, getCardLoot((byte)random.nextInt(4)), i, false));
                             System.out.println("trader: "+mTrade.get(i).toString());
                         }
+                        responceTrade.setSkillCost(mGearScore);
                         break;
                     }
                     case CardTableSubType.BLACKSMITH:{
@@ -166,11 +168,12 @@ class Player {
                             mTrade.add(new CardTrade(this, getCardLoot(InventoryType.FOOD), i, false));
                             System.out.println("INNKEEPER: "+mTrade.get(i).toString());
                         }
+                        responceTrade.setSkillCost(mGearScore);
                         break;
                     }
                 }
-
-                responseStr = getObjectMapper().writeValueAsString(mTrade);
+                responceTrade.setTrade(mTrade);
+                responseStr = getObjectMapper().writeValueAsString(responceTrade);
                 break;
             }
             case CardTableType.CHEST:{
@@ -478,7 +481,7 @@ class Player {
         if (mState == State.TRADE){
             if (mInventory.size() < INVENTORY_MAX_COUNT){
                 Item item = DataBase.getItems().get(cardTrade.getIdItem());
-                if (mMoney >= item.getCost()){
+                if (mMoney >= item.getBuyCost()){
                     List<CardTrade> cardTradeStateList = mTrade.stream().filter(
                             cardTrade::equals
                     ).collect(Collectors.toList());
@@ -505,7 +508,7 @@ class Player {
                 if (!cardInventoryState.isEmpty()){
                     mInventory.remove(cardInventoryState.get(0));
                     Item item = DataBase.getItems().get(cardInventory.getIdItem());
-                    mMoney += item.getCost();
+                    mMoney += item.getSellCost();
                     tryChangeGearScore(item);
                     return true;
                 }
@@ -886,11 +889,11 @@ class Player {
         if (handOne.isWeaponOrShield()){
             Item handTwo = DataBase.getItems().get(startItemId[5]);
             if (handTwo.isWeaponOrShield()){
-                startItemCost += handOne.getCost();
-                startItemCost += handTwo.getCost();
+                startItemCost += handOne.getBuyCost();
+                startItemCost += handTwo.getBuyCost();
                 for (byte i = 0; i<INVENTORY_MAX_COUNT; i++) {
                     if (startItemId[i]!=null){
-                        startItemCost += DataBase.getItems().get(startItemId[i]).getCost();
+                        startItemCost += DataBase.getItems().get(startItemId[i]).getBuyCost();
                     }
                     else{
                         break;
