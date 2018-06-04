@@ -14,7 +14,7 @@ public final class DataBase {
     static {
         VENDOR_ID.add((byte) 1);
         VENDOR_ID.add((byte) 2);
-        VENDOR_ID.add((byte) 3);
+        VENDOR_ID.add((byte) 4);
 
 /*
      MOBS.put((byte)0, new Mob((byte) 0,0, (byte) 0,0, CardTableType.VENDOR, 9999, CardTableSubType.TRADER, 0));

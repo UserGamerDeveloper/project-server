@@ -33,6 +33,8 @@ class Balance {
     private byte COST_VENDOR_SKILL;
     @Column(name="HPD")
     private byte HP_DEFAULT;
+    @Column(name="CR")
+    private byte CARD_REQUIRED_TO_SPAWN_EXIT;
 
     @Column(name="GSPS")
     private byte GEAR_SCORE_PER_STAT;
@@ -84,6 +86,13 @@ class Balance {
     @OneToOne(mappedBy = "mBalance")
     private Player mPlayer;
 
+    public byte getCARD_REQUIRED_TO_SPAWN_EXIT() {
+        return CARD_REQUIRED_TO_SPAWN_EXIT;
+    }
+
+    public void setCARD_REQUIRED_TO_SPAWN_EXIT(byte CARD_REQUIRED_TO_SPAWN_EXIT) {
+        this.CARD_REQUIRED_TO_SPAWN_EXIT = CARD_REQUIRED_TO_SPAWN_EXIT;
+    }
     float[] getREQUIREMENT_EXPERIENCE(){
         return new float[]{
                 mPlayer.getBalance().getLVL1(),

@@ -243,13 +243,13 @@ public class Main {
                 System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start Damage");
                 ObjectMapper mapper = new ObjectMapper();
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
-                CardInventory[] hands = mapper.readValue(request.getData(), CardInventory[].class);
+                CardInventory[] invenroty = mapper.readValue(request.getData(), CardInventory[].class);
                 Session session = Util.getSessionFactory().openSession();
                 session.beginTransaction();
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
                 Response response = new Response();
-                if (player.damageCheck(hands)){
+                if (player.damageCheck(invenroty)){
                     response.setData(player.getDamageResponse());
                     response.setGearScore(player.getGearScore());
                 }
@@ -456,13 +456,13 @@ public class Main {
                 System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start UseSpell");
                 ObjectMapper mapper = new ObjectMapper();
                 Request request = mapper.readValue(getRequestBody(t), Request.class);
-                byte itemID = mapper.readValue(request.getData(), byte.class);
+                UseSpellRequest useSpellRequest = mapper.readValue(request.getData(), UseSpellRequest.class);
                 Session session = Util.getSessionFactory().openSession();
                 session.beginTransaction();
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
                 Response response = new Response();
-                if (player.useSpell(itemID)){
+                if (player.useSpell(useSpellRequest)){
                     response.setData(player.getDamageResponse());
                     response.setGearScore(player.getGearScore());
                 }
