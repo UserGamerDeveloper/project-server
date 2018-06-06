@@ -101,8 +101,10 @@ class Player {
     private byte mTopTwoGearScoreWeaponOrShieldInInventory;
     @Column(name="costVendorSkill")
     private Integer mCostVendorSkill;
-    @Column(name="countKillMobs")
-    private Integer mCountKillMobs;
+    @Column(name="countMobsToPortal")
+    private Integer mCountMobsToPortal;
+    @Column(name="countMobsToVendor")
+    private Integer mCountMobsToVendor;
     @Transient
     private List<Mob> mMobList;
 
@@ -147,6 +149,7 @@ class Player {
             }
             case CardTableType.VENDOR:{
                 mState = State.TRADE;
+                mCountMobsToVendor = 0;
                 Random random = com.server.Util.getRandom();
                 ResponceTrade responceTrade = new ResponceTrade();
                 switch (mob.getSubType()){
@@ -205,7 +208,7 @@ class Player {
             }
             case CardTableType.PORTAL:{
                 mState = State.NONE;
-                mCountKillMobs = 0;
+                mCountMobsToPortal = 0;
                 mHP = 0;
                 mMoneyBank += mMoney;
                 mMoney = 0;
@@ -488,22 +491,21 @@ class Player {
     }
 
     void reset() {
-        mState = State.NONE;
+        dead();
         mMoneyBank = 0;
-        mMoney = 0;
         mStats = new Stats();
-        mInventory.clear();
-        mLoot.clear();
-        mTrade.clear();
     }
 
     void dead() {
         mState = State.NONE;
-        mCountKillMobs = 0;
+        mCountMobsToPortal = 0;
+        mCountMobsToVendor = 0;
         mHP = 0;
         mMoneyBank += mMoney/2;
         mMoney = 0;
         mInventory.clear();
+        mLoot.clear();
+        mTrade.clear();
         mGearScore = 0;
         mTopTwoGearScoreWeaponOrShieldInInventory = 0;
         mTopOneGearScoreWeaponOrShieldInInventory = 0;
@@ -803,8 +805,8 @@ class Player {
 
     private void deadMob(Mob mobTarget) {
         mState = State.SELECT_LOOT;
-        mCountKillMobs++;
-        System.out.println("mCountKillMobs++: "+mCountKillMobs);
+        mCountMobsToPortal++;
+        mCountMobsToVendor++;
         mMoney += mobTarget.getMoney();
         mStats.addExperience(mobTarget.getExperience());
         generateLoot();
@@ -869,33 +871,21 @@ class Player {
 
     private byte getCardTable() {
         Random random = new Random();
-        if (mCountKillMobs >= mBalance.getCARD_REQUIRED_TO_SPAWN_EXIT()){
+        if (mCountMobsToPortal >= mBalance.getCARD_REQUIRED_TO_SPAWN_EXIT()){
             if (random.nextBoolean()){
-                mCountKillMobs = 0;
+                mCountMobsToPortal = 0;
                 return ID_PORTAL;
             }
         }
-        boolean chest = random.nextInt(mBalance.getCHANCE_CHEST())==0;
-        boolean halt = false;
-        boolean vendor = random.nextInt(mBalance.getCHANCE_VENDOR())==0;
-/*
-        boolean vendor = random.nextInt(CHANCE_VENDOR)==0;
-        boolean chest = random.nextInt(CHANCE_CHEST)==0;
-        boolean halt = random.nextInt(CHANCE_HALT)==0;
-*/
-        if(chest && vendor){
+        if (mCountMobsToVendor >= mBalance.getCARD_REQUIRED_TO_SPAWN_VENDOR()){
             if (random.nextBoolean()){
-                return ID_CHEST;
-            }
-            else {
+                mCountMobsToVendor = 0;
                 return DataBase.VENDOR_ID.get(random.nextInt(DataBase.VENDOR_ID.size()));
             }
         }
+        boolean chest = random.nextInt(mBalance.getCHANCE_CHEST())==0;
         if(chest){
             return ID_CHEST;
-        }
-        if(vendor){
-            return DataBase.VENDOR_ID.get(random.nextInt(DataBase.VENDOR_ID.size()));
         }
         if (mMobList == null){
             mMobList = getMobsList();

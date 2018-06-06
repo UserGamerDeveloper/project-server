@@ -33,8 +33,10 @@ class Balance {
     private int MIN_COST_VENDOR_SKILL;
     @Column(name="HPD")
     private byte HP_DEFAULT;
-    @Column(name="CR")
+    @Column(name="CRP")
     private byte CARD_REQUIRED_TO_SPAWN_EXIT;
+    @Column(name="CRV")
+    private byte CARD_REQUIRED_TO_SPAWN_VENDOR;
 
     @Column(name="GSPS")
     private byte GEAR_SCORE_PER_STAT;
@@ -93,6 +95,14 @@ class Balance {
     public void setCARD_REQUIRED_TO_SPAWN_EXIT(byte CARD_REQUIRED_TO_SPAWN_EXIT) {
         this.CARD_REQUIRED_TO_SPAWN_EXIT = CARD_REQUIRED_TO_SPAWN_EXIT;
     }
+    public byte getCARD_REQUIRED_TO_SPAWN_VENDOR() {
+        return CARD_REQUIRED_TO_SPAWN_VENDOR;
+    }
+
+    public void setCARD_REQUIRED_TO_SPAWN_VENDOR(byte CARD_REQUIRED_TO_SPAWN_VENDOR) {
+        this.CARD_REQUIRED_TO_SPAWN_VENDOR = CARD_REQUIRED_TO_SPAWN_VENDOR;
+    }
+
     float[] getREQUIREMENT_EXPERIENCE(){
         return new float[]{
                 mPlayer.getBalance().getLVL1(),
