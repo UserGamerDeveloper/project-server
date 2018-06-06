@@ -370,11 +370,11 @@ class Player {
                     Item item = DataBase.getItems().get(cardPlayer.getIdItem());
                     tryChangeGearScore(item);
                 }
-                CardInventory[] sortInventory = new CardInventory[6];
-                for (CardInventory item : inventory) {
-                    sortInventory[item.getSlotId()] = item;
+                CardInventory[] sortBySlotInventory = new CardInventory[6];
+                for (CardInventory item : mInventory) {
+                    sortBySlotInventory[item.getSlotId()] = item;
                 }
-                CardInventory clientHandOneState = sortInventory[4];
+                CardInventory clientHandOneState = sortBySlotInventory[4];
                 if (!clientHandOneState.isFist()){
                     Item handOne = DataBase.getItems().get(clientHandOneState.getIdItem());
                     if (handOne.isWeaponOrShield()) {
@@ -382,7 +382,7 @@ class Player {
                                 clientHandOneState::equals
                         ).collect(Collectors.toList());
                         if (!handOneState.isEmpty()){
-                            CardInventory clientHandTwoState = sortInventory[5];
+                            CardInventory clientHandTwoState = sortBySlotInventory[5];
                             if (!clientHandTwoState.isFist()){
                                 Item handTwo = DataBase.getItems().get(clientHandTwoState.getIdItem());
                                 if (handTwo.isWeaponOrShield()){
@@ -396,6 +396,7 @@ class Player {
                                 }
                             }
                             else{
+                                mInventory.remove(clientHandTwoState);
                                 damage(handOne, null, handOneState.get(0), null);
                                 return true;
                             }
@@ -403,7 +404,8 @@ class Player {
                     }
                 }
                 else{
-                    CardInventory clientHandTwoState = sortInventory[5];
+                    mInventory.remove(clientHandOneState);
+                    CardInventory clientHandTwoState = sortBySlotInventory[5];
                     if (!clientHandTwoState.isFist()){
                         Item handTwo = DataBase.getItems().get(clientHandTwoState.getIdItem());
                         if (handTwo.isWeaponOrShield()){
@@ -417,6 +419,7 @@ class Player {
                         }
                     }
                     else{
+                        mInventory.remove(clientHandTwoState);
                         damage(null, null, null, null);
                         return true;
                     }
