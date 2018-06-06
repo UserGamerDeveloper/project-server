@@ -155,7 +155,7 @@ class Player {
                             mTrade.add(new CardTrade(this, getCardLoot((byte)random.nextInt(4)), i, false));
                             System.out.println("trader: "+mTrade.get(i).toString());
                         }
-                        mCostVendorSkill = mGearScore;
+                        setCostVendorSkill();
                         responceTrade.setSkillCost(mCostVendorSkill);
                         break;
                     }
@@ -176,7 +176,7 @@ class Player {
                             mTrade.add(new CardTrade(this, getCardLoot(InventoryType.FOOD), i, false));
                             System.out.println("INNKEEPER: "+mTrade.get(i).toString());
                         }
-                        mCostVendorSkill = mGearScore;
+                        setCostVendorSkill();
                         responceTrade.setSkillCost(mCostVendorSkill);
                         break;
                     }
@@ -218,6 +218,15 @@ class Player {
         }
         System.out.println("getSetTargetResponse: " + responseStr);
         return responseStr;
+    }
+
+    private void setCostVendorSkill() {
+        if (mGearScore>0){
+            mCostVendorSkill = mGearScore;
+        }
+        else{
+            mCostVendorSkill = mBalance.getMIN_COST_VENDOR_SKILL();
+        }
     }
 
     String getDamageResponse() throws JsonProcessingException {
@@ -481,6 +490,8 @@ class Player {
         mMoney = 0;
         mStats = new Stats();
         mInventory.clear();
+        mLoot.clear();
+        mTrade.clear();
     }
 
     void dead() {
@@ -542,6 +553,7 @@ class Player {
                         mInventory.add(new CardInventory(cardTradeState));
                         mTrade.remove(cardTrade);
                         tryChangeGearScore(item);
+                        mMoney -= item.getBuyCost();
                         return true;
                     }
                 }
@@ -570,7 +582,7 @@ class Player {
 
     boolean useSkillTrader(){
         if (mState == State.TRADE){
-            if (mMoney >= mBalance.getCOST_VENDOR_SKILL()){
+            if (mMoney >= mCostVendorSkill){
                 Mob mob = DataBase.getMobs().get(mCardTableTargetID);
                 if (mob.getSubType()==CardTableSubType.TRADER){
                     mMoney -= mCostVendorSkill;
@@ -587,20 +599,26 @@ class Player {
         return false;
     }
 
-    boolean useSkillBlacksmith(CardInventory itemState) {
+    boolean useSkillBlacksmith(CardInventory itemStateClient) {
         if (mState == State.TRADE){
-            if (mMoney >= mBalance.getCOST_VENDOR_SKILL()){
-                if (!itemState.isFist()){
-                    Mob mob = DataBase.getMobs().get(mCardTableTargetID);
-                    if (mob.getSubType()==CardTableSubType.BLACKSMITH){
-                        List<CardInventory> cardInventoryState = mInventory.stream().filter(
-                                itemState::equals
-                        ).collect(Collectors.toList());
-                        if (!cardInventoryState.isEmpty()){
-                            mMoney -= mBalance.getCOST_VENDOR_SKILL();
-                            Item item = DataBase.getItems().get(itemState.getIdItem());
-                            cardInventoryState.get(0).setDurability(item.getDurabilityMax());
-                            return true;
+            Item item = DataBase.getItems().get(itemStateClient.getIdItem());
+            if (itemStateClient.getDurability() < item.getDurabilityMax()){
+                List<CardInventory> itemStateListServer = mInventory.stream().filter(
+                        itemStateClient::equals
+                ).collect(Collectors.toList());
+                if (!itemStateListServer.isEmpty()){
+                    CardInventory itemStateServer = itemStateListServer.get(0);
+                    mCostVendorSkill = (int)((float)(item.getDurabilityMax() -
+                            itemStateServer.getDurability())/(float)item.getDurabilityMax()*
+                            (float)item.getBuyCost()/2f);
+                    if (mMoney >= mCostVendorSkill){
+                        if (!itemStateServer.isFist()){
+                            Mob mob = DataBase.getMobs().get(mCardTableTargetID);
+                            if (mob.getSubType()==CardTableSubType.BLACKSMITH){
+                                mMoney -= mCostVendorSkill;
+                                itemStateServer.setDurability(item.getDurabilityMax());
+                                return true;
+                            }
                         }
                     }
                 }
@@ -611,7 +629,7 @@ class Player {
 
     boolean useSkillInnkeeper(){
         if (mState == State.TRADE){
-            if (mMoney >= mBalance.getCOST_VENDOR_SKILL()){
+            if (mMoney >= mCostVendorSkill){
                 Mob mob = DataBase.getMobs().get(mCardTableTargetID);
                 if (mob.getSubType()==CardTableSubType.INNKEEPER){
                     mMoney -= mCostVendorSkill;
@@ -870,43 +888,11 @@ class Player {
                 return DataBase.VENDOR_ID.get(random.nextInt(DataBase.VENDOR_ID.size()));
             }
         }
-        if(chest&&!vendor&&!halt){
+        if(chest){
             return ID_CHEST;
         }
-        if(!chest&&vendor&&!halt){
+        if(vendor){
             return DataBase.VENDOR_ID.get(random.nextInt(DataBase.VENDOR_ID.size()));
-        }
-        if(!chest && !vendor && halt){
-            return 7;
-        }
-        if(halt && vendor){
-            if (random.nextBoolean()){
-                return 7;
-            }
-            else {
-                return DataBase.VENDOR_ID.get(random.nextInt(DataBase.VENDOR_ID.size()));
-            }
-        }
-        if(halt && chest){
-            if (random.nextBoolean()){
-                return 7;
-            }
-            else {
-                return ID_CHEST;
-            }
-        }
-        if(chest && vendor && halt) {
-            switch (random.nextInt(3)){
-                case 0:{
-                    return ID_CHEST;
-                }
-                case 1:{
-                    return DataBase.VENDOR_ID.get(random.nextInt(DataBase.VENDOR_ID.size()));
-                }
-                case 3:{
-                    return 7;
-                }
-            }
         }
         if (mMobList == null){
             mMobList = getMobsList();

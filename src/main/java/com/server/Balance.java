@@ -29,8 +29,8 @@ class Balance {
     private byte CHANCE_SPELL;
     @Column(name="CWOS")
     private byte CHANCE_WEAPON_OE_SHIELD;
-    @Column(name="CVS")
-    private byte COST_VENDOR_SKILL;
+    @Column(name="MCVS")
+    private int MIN_COST_VENDOR_SKILL;
     @Column(name="HPD")
     private byte HP_DEFAULT;
     @Column(name="CR")
@@ -182,12 +182,12 @@ class Balance {
         this.CHANCE_WEAPON_OE_SHIELD = CHANCE_WEAPON_OE_SHIELD;
     }
 
-    public byte getCOST_VENDOR_SKILL() {
-        return COST_VENDOR_SKILL;
+    public int getMIN_COST_VENDOR_SKILL() {
+        return MIN_COST_VENDOR_SKILL;
     }
 
-    public void setCOST_VENDOR_SKILL(byte COST_VENDOR_SKILL) {
-        this.COST_VENDOR_SKILL = COST_VENDOR_SKILL;
+    public void setMIN_COST_VENDOR_SKILL(int MIN_COST_VENDOR_SKILL) {
+        this.MIN_COST_VENDOR_SKILL = MIN_COST_VENDOR_SKILL;
     }
 
     public byte getHP_DEFAULT() {
