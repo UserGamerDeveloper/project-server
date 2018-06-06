@@ -772,14 +772,21 @@ class Player {
     private void tryPickingLoot() {
 
         CardInventory[] inventory = new CardInventory[6];
-        for (CardInventory item :mInventory) {
+        for (CardInventory item : mInventory) {
             inventory[item.getSlotId()] = item;
         }
         for (byte i = 0; mInventory.size() < INVENTORY_MAX_COUNT; i++){
             if (!mLoot.isEmpty() && i < INVENTORY_MAX_COUNT){
                 if (inventory[i]==null){
                     Item item = DataBase.getItems().get(mLoot.get(0).getIdItem());
-                    if (i==4 || i==5){
+                    if (i!=4 && i!=5){
+                        CardLoot loot = mLoot.get(0);
+                        loot.setSlotId(i);
+                        mInventory.add(new CardInventory(loot));
+                        mLoot.remove(0);
+                        tryChangeGearScore(item);
+                    }
+                    else{
                         if (item.isWeaponOrShield()){
                             CardLoot loot = mLoot.get(0);
                             loot.setSlotId(i);
@@ -787,13 +794,6 @@ class Player {
                             mLoot.remove(0);
                             tryChangeGearScore(item);
                         }
-                    }
-                    else{
-                        CardLoot loot = mLoot.get(0);
-                        loot.setSlotId(i);
-                        mInventory.add(new CardInventory(loot));
-                        mLoot.remove(0);
-                        tryChangeGearScore(item);
                     }
                 }
             }
