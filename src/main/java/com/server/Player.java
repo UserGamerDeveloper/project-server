@@ -300,9 +300,6 @@ class Player {
                         {
                             gearScoreWeaponOrShieldInInventory.add(item.getGearScore());
                         }
-                        else {
-                            mGearScore += item.getGearScore();
-                        }
                     }
                     else{
                         break;
@@ -666,7 +663,6 @@ class Player {
                 if (!itemList.isEmpty()){
                     mHP += item.getValueOne();
                     mLoot.remove(itemList.get(0));
-                    mGearScore -= item.getGearScore();
                     return true;
                 }
             }
@@ -676,7 +672,6 @@ class Player {
             if (!itemList.isEmpty()){
                 mHP += item.getValueOne();
                 mInventory.remove(itemList.get(0));
-                mGearScore -= item.getGearScore();
                 return true;
             }
         }
@@ -707,7 +702,6 @@ class Player {
                     if (mCardTableTargetHP<1){
                         deadMob(DataBase.getMobs().get(mCardTableTargetID));
                     }
-                    mGearScore -= item.getGearScore();
                     mInventory.remove(spell);
                     return true;
                 }
@@ -899,9 +893,6 @@ class Player {
                 changeGearScore();
             }
         }
-        else {
-            mGearScore += item.getGearScore();
-        }
     }
 
     private void changeGearScore() {
@@ -958,6 +949,14 @@ class Player {
         return false;
     }
 
+    @JsonIgnore
+    private List<Mob> getMobsList() {
+        return DataBase.getMobs().values().stream().filter(
+                mob -> (mob.getGearScore() <= mGearScore) &&
+                        (mob.getGearScore() >= mGearScore-3)
+        ).collect(Collectors.toList());
+    }
+
     //region setters/getters
     public void setLoginTime(Timestamp loginTime) {
         mLoginTime = loginTime;
@@ -969,13 +968,6 @@ class Player {
     @JsonIgnore
     public void setBalance(Balance balance) {
         mBalance = balance;
-    }
-    @JsonIgnore
-    private List<Mob> getMobsList() {
-        return DataBase.getMobs().values().stream().filter(
-                mob -> (mob.getGearScore() <= mGearScore) /*&&
-                        (mob.getGearScore() >= mGearScore*GEAR_SCORE_RANGE_RATE)*/
-        ).collect(Collectors.toList());
     }
     @JsonIgnore
     public int getID() {
