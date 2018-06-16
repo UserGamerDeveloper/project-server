@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ResponceTrade {
-    private List<CardTrade> mTrade;
+    private List<ItemResponse> mTrade;
     private Integer mSkillCost;
 
-    public List<CardTrade> getTrade() {
+    public List<ItemResponse> getTrade() {
         return mTrade;
     }
 
-    public void setTrade(List<CardTrade> trade) {
+    public void setTrade(List<ItemResponse> trade) {
         mTrade = trade;
     }
 

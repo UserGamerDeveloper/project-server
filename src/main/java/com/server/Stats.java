@@ -54,6 +54,7 @@ class Stats {
     private byte mHPPoints;
     @Column(name="points")
     private byte mPoints;
+
     @OneToOne(mappedBy = "mStats")
     private Player mPlayer;
 
@@ -164,5 +165,13 @@ class Stats {
 
     int getHPBonus() {
         return mHPPoints * mPlayer.getBalance().getHP_BONUS_PER_STAT();
+    }
+
+    public Player getPlayer() {
+        return mPlayer;
+    }
+
+    public void setPlayer(Player player) {
+        mPlayer = player;
     }
 }

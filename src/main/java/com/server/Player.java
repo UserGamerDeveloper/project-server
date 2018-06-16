@@ -120,7 +120,7 @@ class Player {
 
     String getLoginResponse() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
-        String resposse = mapper.writeValueAsString(this);
+        String resposse = mapper.writeValueAsString(new LoginResponce(this));
         System.out.println("getLoginResponse: "+resposse);
         return resposse;
     }
@@ -133,7 +133,7 @@ class Player {
         mCardTable6 = getCardTable();
         mHP = (byte) (mBalance.getHP_DEFAULT() + mStats.getHPBonus());
         ObjectMapper mapper = new ObjectMapper();
-        String response = mapper.writeValueAsString(getStartCardTable());
+        String response = mapper.writeValueAsString(getNextMobs());
         System.out.println("getStartResponse: "+response);
         return response;
     }
@@ -155,7 +155,14 @@ class Player {
                 switch (mob.getSubType()){
                     case CardTableSubType.TRADER:{
                         for (byte i = 0; i < LOOT_AND_TRADECARD_MAX_COUNT; i++) {
-                            mTrade.add(new CardTrade(this, getCardLoot((byte)random.nextInt(4)), i, false));
+                            mTrade.add(
+                                    new CardTrade(
+                                            this,
+                                            getCardLoot((byte)random.nextInt(4)),
+                                            i,
+                                            false
+                                    )
+                            );
                             System.out.println("trader: "+mTrade.get(i).toString());
                         }
                         setCostVendorSkill();
@@ -176,7 +183,14 @@ class Player {
                     }
                     case CardTableSubType.INNKEEPER:{
                         for (byte i = 0; i < LOOT_AND_TRADECARD_MAX_COUNT; i++) {
-                            mTrade.add(new CardTrade(this, getCardLoot(InventoryType.FOOD), i, false));
+                            mTrade.add(
+                                    new CardTrade(
+                                            this,
+                                            getCardLoot(InventoryType.FOOD),
+                                            i,
+                                            false
+                                    )
+                            );
                             System.out.println("INNKEEPER: "+mTrade.get(i).toString());
                         }
                         setCostVendorSkill();
@@ -184,7 +198,7 @@ class Player {
                         break;
                     }
                 }
-                responceTrade.setTrade(mTrade);
+                responceTrade.setTrade(Util.convertItems(mTrade));
                 responseStr = getObjectMapper().writeValueAsString(responceTrade);
                 break;
             }
@@ -197,11 +211,11 @@ class Player {
                     System.out.println("CHEST: "+mLoot.get(i).toString());
                 }
                 DamageResponse response = new DamageResponse();
-                response.setLoot(getObjectMapper().writeValueAsString(mLoot));
+                response.setLoot(getObjectMapper().writeValueAsString(Util.convertItems(mLoot)));
                 tryPickingLoot();
                 if (mLoot.isEmpty()) {
                     setStateSelectTarget();
-                    response.setCardTableID(getStartCardTable());
+                    response.setNextMobs(getNextMobs());
                 }
                 responseStr = getObjectMapper().writeValueAsString(response);
                 break;
@@ -237,11 +251,11 @@ class Player {
         if (mState==State.SELECT_LOOT){
             ObjectMapper mapper = getObjectMapper();
             DamageResponse response = new DamageResponse();
-            response.setLoot(mapper.writeValueAsString(mLoot));
+            response.setLoot(mapper.writeValueAsString(Util.convertItems(mLoot)));
             tryPickingLoot();
             if (mLoot.isEmpty()) {
                 setStateSelectTarget();
-                response.setCardTableID(getStartCardTable());
+                response.setNextMobs(getNextMobs());
             }
             resonceStr = mapper.writeValueAsString(response);
         }
@@ -258,7 +272,7 @@ class Player {
     String getContinueResponse() throws JsonProcessingException {
         setStateSelectTarget();
         ObjectMapper mapper = new ObjectMapper();
-        String response = mapper.writeValueAsString(getStartCardTable());
+        String response = mapper.writeValueAsString(getNextMobs());
         System.out.println("getContinueResponse: "+response);
         return response;
     }
@@ -270,7 +284,7 @@ class Player {
             if (mLoot.isEmpty()) {
                 setStateSelectTarget();
                 ObjectMapper mapper = new ObjectMapper();
-                response = mapper.writeValueAsString(getStartCardTable());
+                response = mapper.writeValueAsString(getNextMobs());
             }
         }
         System.out.println("getUseFoodResponse: "+response);
@@ -854,13 +868,13 @@ class Player {
         return itemList.get(random.nextInt(itemList.size())).getID();
     }
 
-    private short[] getStartCardTable() {
-        short[] startCardTableID = new short[4];
-        startCardTableID[0] = mCardTable1;
-        startCardTableID[1] = mCardTable3;
-        startCardTableID[2] = mCardTable4;
-        startCardTableID[3] = mCardTable6;
-        return startCardTableID;
+    private Mob[] getNextMobs() {
+        Mob[] nextMobs = new Mob[4];
+        nextMobs[0] = DataBase.getMobs().get(mCardTable1);
+        nextMobs[1] = DataBase.getMobs().get(mCardTable3);
+        nextMobs[2] = DataBase.getMobs().get(mCardTable4);
+        nextMobs[3] = DataBase.getMobs().get(mCardTable6);
+        return nextMobs;
     }
 
     private byte getCardTable() {

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class Util {
@@ -26,5 +28,13 @@ public class Util {
 
     public static ObjectMapper getObjectMapper() {
         return OBJECT_MAPPER;
+    }
+
+    public static List<ItemResponse> convertItems(List<? extends CardPlayer> inventory) {
+        List<ItemResponse> items = new ArrayList<>();
+        for (CardPlayer item : inventory) {
+            items.add(new ItemResponse(item));
+        }
+        return items;
     }
 }
