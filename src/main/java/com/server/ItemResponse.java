@@ -11,6 +11,18 @@ public class ItemResponse {
     private int mDurability;
     private byte mSlotId;
 
+    ItemResponse() {}
+    ItemResponse(byte id) {
+        mID = id;
+        Item item = DataBase.getItems().get(mID);
+        mValueOne = item.getValueOne();
+        mType = item.getType();
+        mDurabilityMax = item.getDurabilityMax();
+        mDurability = mDurabilityMax;
+        mGearScore = item.getGearScore();
+        mMobGearScore = item.getMobGearScore();
+        mCost = item.getBuyCost();
+    }
     ItemResponse(CardPlayer itemState) {
         mID = itemState.getIdItem();
         mDurability = itemState.getDurability();

@@ -65,6 +65,7 @@ public class Main {
         server.createContext("/test", new Test());
         server.createContext("/dead", new Dead());
         server.createContext("/reset", new Reset());
+        server.createContext("/getinfo", new GetInfo());
         server.setExecutor(directExecutor);
         server.start();
         System.out.println("Start server");
@@ -677,6 +678,27 @@ public class Main {
                 System.out.println(
                         new Date() +" Thread " + Thread.currentThread().getId() + " stop reset"
                 );
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class GetInfo implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start GetInfo");
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                byte idItem = mapper.readValue(request.getData(), byte.class);
+                Session session = Util.getSessionFactory().openSession();
+                session.beginTransaction();
+                Response response = new Response();
+                response.setData(Util.getInfoItemResponse(idItem));
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop GetInfo");
             }
             catch (Exception e){
                 e.printStackTrace();

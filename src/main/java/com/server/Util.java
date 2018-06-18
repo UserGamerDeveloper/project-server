@@ -1,5 +1,6 @@
 package com.server;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hibernate.SessionFactory;
@@ -36,5 +37,10 @@ public class Util {
             items.add(new ItemResponse(item));
         }
         return items;
+    }
+
+    public static String getInfoItemResponse(byte id) throws JsonProcessingException {
+        ItemResponse item = new ItemResponse(id);
+        return getObjectMapper().writeValueAsString(item);
     }
 }
