@@ -4,12 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.hibernate.Session;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -107,6 +109,8 @@ class Player {
     private Integer mCountMobsToVendor;
     @Transient
     private List<Mob> mMobList;
+    @Transient
+    private Hashtable<Byte, Mob> MOBS;
 
     Player(String email){
         mEmail = email;
@@ -140,7 +144,7 @@ class Player {
 
     String getSetTargetResponse() throws JsonProcessingException {
         String responseStr = null;
-        Mob mob = DataBase.getMobs().get(mCardTableTargetID);
+        Mob mob = getMobs().get(mCardTableTargetID);
         switch (mob.getType()){
             case CardTableType.MOB:{
                 mState = State.COMBAT;
@@ -155,10 +159,16 @@ class Player {
                 switch (mob.getSubType()){
                     case CardTableSubType.TRADER:{
                         for (byte i = 0; i < LOOT_AND_TRADECARD_MAX_COUNT; i++) {
-                            mTrade.add(
-                                    new CardTrade(
+                            int typeItem;
+                            if (mGearScore>0){
+                                typeItem = random.nextInt(4);
+                            }
+                            else{
+                                typeItem = random.nextInt(3)+1;
+                            }
+                            mTrade.add(new CardTrade(
                                             this,
-                                            getCardLoot((byte)random.nextInt(4)),
+                                            getCardLoot((byte)typeItem),
                                             i,
                                             false
                                     )
@@ -171,11 +181,19 @@ class Player {
                     }
                     case CardTableSubType.BLACKSMITH:{
                         for (byte i = 0; i < LOOT_AND_TRADECARD_MAX_COUNT; i++) {
+                            int typeItem;
+                            if (mGearScore>0){
+                                typeItem = random.nextInt(2);
+                            }
+                            else{
+                                typeItem = InventoryType.WEAPON;
+                            }
                             mTrade.add(new CardTrade(
                                     this,
-                                    getCardLoot((byte)random.nextInt(2)),
+                                    getCardLoot((byte)typeItem),
                                     i,
-                                    true)
+                                    true
+                                    )
                             );
                             System.out.println("BLACKSMITH: "+mTrade.get(i).toString());
                         }
@@ -206,8 +224,15 @@ class Player {
                 mState = State.SELECT_LOOT;
                 mMoney += mob.getMoney();
                 Random random = com.server.Util.getRandom();
+                int typeItem;
                 for (byte i = 0; i < LOOT_AND_TRADECARD_MAX_COUNT; i++) {
-                    mLoot.add(new CardLoot(this, getCardLoot((byte)random.nextInt(4)), i));
+                    if (mGearScore>0){
+                        typeItem = random.nextInt(4);
+                    }
+                    else{
+                        typeItem = random.nextInt(3)+1;
+                    }
+                    mLoot.add(new CardLoot(this, getCardLoot((byte)typeItem), i));
                     System.out.println("CHEST: "+mLoot.get(i).toString());
                 }
                 DamageResponse response = new DamageResponse();
@@ -444,7 +469,7 @@ class Player {
     }
 
     private void damage(Item handOne, Item handTwo, CardInventory handOneState, CardInventory handTwoState){
-        Mob mobTarget = DataBase.getMobs().get(mCardTableTargetID);
+        Mob mobTarget = getMobs().get(mCardTableTargetID);
         int mobDamage = mobTarget.getValueOne();
         if (handOne!=null){
             if(mobDamage > 0 && handOne.getType() == InventoryType.SHIELD){
@@ -599,7 +624,7 @@ class Player {
     boolean useSkillTrader(){
         if (mState == State.TRADE){
             if (mMoney >= mCostVendorSkill){
-                Mob mob = DataBase.getMobs().get(mCardTableTargetID);
+                Mob mob = getMobs().get(mCardTableTargetID);
                 if (mob.getSubType()==CardTableSubType.TRADER){
                     mMoney -= mCostVendorSkill;
                     mTrade.clear();
@@ -629,7 +654,7 @@ class Player {
                             (float)item.getBuyCost()/2f);
                     if (mMoney >= mCostVendorSkill){
                         if (!itemStateServer.isFist()){
-                            Mob mob = DataBase.getMobs().get(mCardTableTargetID);
+                            Mob mob = getMobs().get(mCardTableTargetID);
                             if (mob.getSubType()==CardTableSubType.BLACKSMITH){
                                 mMoney -= mCostVendorSkill;
                                 itemStateServer.setDurability(item.getDurabilityMax());
@@ -646,7 +671,7 @@ class Player {
     boolean useSkillInnkeeper(){
         if (mState == State.TRADE){
             if (mMoney >= mCostVendorSkill){
-                Mob mob = DataBase.getMobs().get(mCardTableTargetID);
+                Mob mob = getMobs().get(mCardTableTargetID);
                 if (mob.getSubType()==CardTableSubType.INNKEEPER){
                     mMoney -= mCostVendorSkill;
                     mHP = (byte) (mBalance.getHP_DEFAULT() + mStats.getHPBonus());
@@ -714,7 +739,7 @@ class Player {
                 if (mState == State.COMBAT){
                     mCardTableTargetHP = (byte)(mCardTableTargetHP-item.getValueOne());
                     if (mCardTableTargetHP<1){
-                        deadMob(DataBase.getMobs().get(mCardTableTargetID));
+                        deadMob(getMobs().get(mCardTableTargetID));
                     }
                     mInventory.remove(spell);
                     return true;
@@ -779,6 +804,8 @@ class Player {
 
     private void tryPickingLoot() {
 
+        mCardTableTargetID = null;
+        mCardTableTargetHP = null;
         CardInventory[] inventory = new CardInventory[6];
         for (CardInventory item : mInventory) {
             inventory[item.getSlotId()] = item;
@@ -822,15 +849,13 @@ class Player {
 
     private void generateLoot() {
         int[] typeLoot = new int[3];
-        Mob mob = DataBase.getMobs().get(mCardTableTargetID);
-        mCardTableTargetID = null;
-        mCardTableTargetHP = null;
+        Mob mob = getMobs().get(mCardTableTargetID);
         Random random = new Random();
         int lootCount = 0;
         if (mob.getType()==CardTableType.MOB){
             if (mob.getSubType()!=CardTableSubType.FOREST){
                 if (random.nextInt(mBalance.getCHANCE_WEAPON_OE_SHIELD())==0){
-                    if (random.nextBoolean()){
+                    if (random.nextBoolean() && mob.getGearScore()>0){
                         typeLoot[lootCount]=InventoryType.WEAPON;
                     }
                     else{
@@ -851,7 +876,12 @@ class Player {
         else{
             lootCount = random.nextInt(3)+1;
             for (byte i = 0; i < lootCount; i++){
-                typeLoot[i]=random.nextInt(4);
+                if (mGearScore>0){
+                    typeLoot[i]=random.nextInt(4);
+                }
+                else{
+                    typeLoot[i]=random.nextInt(3)+1;
+                }
             }
         }
         for (byte i = 0; i < lootCount; i++) {
@@ -861,19 +891,29 @@ class Player {
     }
 
     private byte getCardLoot(byte type) {
+        System.out.println("type: "+type);
         Random random = new Random();
+        Mob mob = getMobs().get(mCardTableTargetID);
+        int gearscore;
+        if (mob.getType()==CardTableType.MOB){
+            gearscore = mob.getGearScore();
+        }
+        else{
+            gearscore = mGearScore;
+        }
         List<Item> itemList = DataBase.getItems().values().stream().filter(
-                item -> (item.getMobGearScore() <= mGearScore) && (item.getType() == type)
-        ).collect(Collectors.toList());;
-        return itemList.get(random.nextInt(itemList.size())).getID();
+                item -> (item.getMobGearScore() == gearscore) && (item.getType() == type)
+        ).collect(Collectors.toList());
+        int positionInList = random.nextInt(itemList.size());
+        return itemList.get(positionInList).getID();
     }
 
     private Mob[] getNextMobs() {
         Mob[] nextMobs = new Mob[4];
-        nextMobs[0] = DataBase.getMobs().get(mCardTable1);
-        nextMobs[1] = DataBase.getMobs().get(mCardTable3);
-        nextMobs[2] = DataBase.getMobs().get(mCardTable4);
-        nextMobs[3] = DataBase.getMobs().get(mCardTable6);
+        nextMobs[0] = getMobs().get(mCardTable1);
+        nextMobs[1] = getMobs().get(mCardTable3);
+        nextMobs[2] = getMobs().get(mCardTable4);
+        nextMobs[3] = getMobs().get(mCardTable6);
         return nextMobs;
     }
 
@@ -965,10 +1005,25 @@ class Player {
 
     @JsonIgnore
     private List<Mob> getMobsList() {
-        return DataBase.getMobs().values().stream().filter(
+        return getMobs().values().stream().filter(
                 mob -> (mob.getGearScore() <= mGearScore) &&
                         (mob.getGearScore() >= mGearScore-mBalance.getGEAR_SCORE_RANGE())
         ).collect(Collectors.toList());
+    }
+    @JsonIgnore
+    Hashtable<Byte, Mob> getMobs(){
+        if (MOBS == null){
+            Session session = Util.getSessionFactory().openSession();
+            List<Mob> mobs = session.createNativeQuery(
+                    "SELECT * FROM mobs",
+                    Mob.class
+            ).getResultList();
+            MOBS = new Hashtable<>();
+            for (Mob mob : mobs) {
+                MOBS.put(mob.getID(),mob);
+            }
+        }
+        return MOBS;
     }
 
     //region setters/getters

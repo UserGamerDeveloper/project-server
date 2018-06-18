@@ -8,8 +8,10 @@ import java.util.List;
 
 public final class DataBase {
     final static ArrayList<Byte> VENDOR_ID = new ArrayList<>(3);
+/*
     static Hashtable<Byte, Mob> MOBS;
     static Hashtable<Byte, Item> ITEMS;
+*/
 
     static {
         VENDOR_ID.add((byte) 1);
@@ -37,7 +39,7 @@ public final class DataBase {
                 "SELECT * FROM mobs",
                 Mob.class
         ).getResultList();
-        MOBS = new Hashtable<>();
+        Hashtable<Byte, Mob> MOBS = new Hashtable<>();
         for (Mob mob : mobs) {
             MOBS.put(mob.getID(),mob);
         }
@@ -49,7 +51,7 @@ public final class DataBase {
                 "SELECT * FROM items",
                 Item.class
         ).getResultList();
-        ITEMS = new Hashtable<>();
+        Hashtable<Byte, Item> ITEMS = new Hashtable<>();
         for (Item item : items) {
             ITEMS.put(item.getID(),item);
         }
