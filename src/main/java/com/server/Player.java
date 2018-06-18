@@ -967,7 +967,7 @@ class Player {
     private List<Mob> getMobsList() {
         return DataBase.getMobs().values().stream().filter(
                 mob -> (mob.getGearScore() <= mGearScore) &&
-                        (mob.getGearScore() >= mGearScore-3)
+                        (mob.getGearScore() >= mGearScore-mBalance.getGEAR_SCORE_RANGE())
         ).collect(Collectors.toList());
     }
 

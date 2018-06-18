@@ -15,8 +15,8 @@ class Balance {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     @Column(name="id")
     private int mID;
-    @Column(name="GSRR")
-    private float GEAR_SCORE_RANGE_RATE;
+    @Column(name="GSR")
+    private int GEAR_SCORE_RANGE;
     @Column(name="CH")
     private byte CHANCE_HALT;
     @Column(name="CV")
@@ -136,12 +136,12 @@ class Balance {
         mID = ID;
     }
 
-    public float getGEAR_SCORE_RANGE_RATE() {
-        return GEAR_SCORE_RANGE_RATE;
+    public int getGEAR_SCORE_RANGE() {
+        return GEAR_SCORE_RANGE;
     }
 
-    public void setGEAR_SCORE_RANGE_RATE(float GEAR_SCORE_RANGE_RATE) {
-        this.GEAR_SCORE_RANGE_RATE = GEAR_SCORE_RANGE_RATE;
+    public void setGEAR_SCORE_RANGE(int GEAR_SCORE_RANGE) {
+        this.GEAR_SCORE_RANGE = GEAR_SCORE_RANGE;
     }
 
     public byte getCHANCE_HALT() {
