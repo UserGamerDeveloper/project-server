@@ -222,6 +222,7 @@ public class Main {
                 Response response = new Response();
                 if (player.setTarget(id)){
                     response.setData(player.getSetTargetResponse());
+                    response.setGearScore(player.getGearScore());
                 }
                 else{
                     response.setError(ResponceErrorCode.CHEAT_OR_BUG);
