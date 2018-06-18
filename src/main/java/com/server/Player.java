@@ -239,7 +239,7 @@ class Player {
 
     private void setCostVendorSkill() {
         if (mGearScore>0){
-            mCostVendorSkill = mGearScore;
+            mCostVendorSkill = (int)(mGearScore*mBalance.getVENDOR_SKILL_COST_K());
         }
         else{
             mCostVendorSkill = mBalance.getMIN_COST_VENDOR_SKILL();

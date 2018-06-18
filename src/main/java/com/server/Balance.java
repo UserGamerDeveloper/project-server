@@ -37,6 +37,8 @@ class Balance {
     private byte CARD_REQUIRED_TO_SPAWN_EXIT;
     @Column(name="CRV")
     private byte CARD_REQUIRED_TO_SPAWN_VENDOR;
+    @Column(name="VSC")
+    private float VENDOR_SKILL_COST_K;
 
     @Column(name="GSPS")
     private byte GEAR_SCORE_PER_STAT;
@@ -87,6 +89,14 @@ class Balance {
 
     @OneToOne(mappedBy = "mBalance")
     private Player mPlayer;
+
+    public float getVENDOR_SKILL_COST_K() {
+        return VENDOR_SKILL_COST_K;
+    }
+
+    public void setVENDOR_SKILL_COST_K(float VENDOR_SKILL_COST_K) {
+        this.VENDOR_SKILL_COST_K = VENDOR_SKILL_COST_K;
+    }
 
     public byte getCARD_REQUIRED_TO_SPAWN_EXIT() {
         return CARD_REQUIRED_TO_SPAWN_EXIT;

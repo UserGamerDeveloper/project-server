@@ -579,7 +579,7 @@ public class Main {
                 switch (balanceRequest.getBase()){
                     case "3":
                     case "0":{
-                        if (balanceRequest.getParam().equals("GSRR")){
+                        if (balanceRequest.getParam().equals("VSC")){
                             sql = String.format(
                                     "UPDATE %s SET %s='%f'",
                                     "balance",
