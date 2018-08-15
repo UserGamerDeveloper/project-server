@@ -544,6 +544,10 @@ class Player {
         mGearScore = 0;
         mTopTwoGearScoreWeaponOrShieldInInventory = 0;
         mTopOneGearScoreWeaponOrShieldInInventory = 0;
+        mCardTable0 = null;
+        mCardTable2 = null;
+        mCardTable5 = null;
+        mCardTable7 = null;
     }
 
     boolean exit(){
@@ -863,7 +867,7 @@ class Player {
         if (mob.getType()==CardTableType.MOB){
             if (mob.getSubType()!=CardTableSubType.FOREST){
                 if (random.nextInt(mBalance.getCHANCE_WEAPON_OE_SHIELD())==0){
-                    if (random.nextBoolean() && mob.getGearScore()>0){
+                    if (random.nextBoolean()/* && mob.getGearScore()>0*/){
                         typeLoot[lootCount]=InventoryType.WEAPON;
                     }
                     else{
