@@ -34,7 +34,7 @@ class Balance {
     @Column(name="HPD")
     private byte HP_DEFAULT;
     @Column(name="CRP")
-    private byte CARD_REQUIRED_TO_SPAWN_EXIT;
+    private byte CARD_REQUIRED_TO_SPAWN_INNKEEPER;
     @Column(name="CRV")
     private byte CARD_REQUIRED_TO_SPAWN_VENDOR;
     @Column(name="VSC")
@@ -98,12 +98,12 @@ class Balance {
         this.VENDOR_SKILL_COST_K = VENDOR_SKILL_COST_K;
     }
 
-    public byte getCARD_REQUIRED_TO_SPAWN_EXIT() {
-        return CARD_REQUIRED_TO_SPAWN_EXIT;
+    public byte getCARD_REQUIRED_TO_SPAWN_INNKEEPER() {
+        return CARD_REQUIRED_TO_SPAWN_INNKEEPER;
     }
 
-    public void setCARD_REQUIRED_TO_SPAWN_EXIT(byte CARD_REQUIRED_TO_SPAWN_EXIT) {
-        this.CARD_REQUIRED_TO_SPAWN_EXIT = CARD_REQUIRED_TO_SPAWN_EXIT;
+    public void setCARD_REQUIRED_TO_SPAWN_INNKEEPER(byte CARD_REQUIRED_TO_SPAWN_INNKEEPER) {
+        this.CARD_REQUIRED_TO_SPAWN_INNKEEPER = CARD_REQUIRED_TO_SPAWN_INNKEEPER;
     }
     public byte getCARD_REQUIRED_TO_SPAWN_VENDOR() {
         return CARD_REQUIRED_TO_SPAWN_VENDOR;

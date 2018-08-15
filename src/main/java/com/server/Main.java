@@ -66,6 +66,7 @@ public class Main {
         server.createContext("/dead", new Dead());
         server.createContext("/reset", new Reset());
         server.createContext("/getinfo", new GetInfo());
+        server.createContext("/exit", new Exit());
         server.setExecutor(directExecutor);
         server.start();
         System.out.println("Start server");
@@ -451,6 +452,30 @@ public class Main {
         }
     }
 
+    static class Exit implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            try {
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " start Exit");
+                ObjectMapper mapper = new ObjectMapper();
+                Request request = mapper.readValue(getRequestBody(t), Request.class);
+                Session session = Util.getSessionFactory().openSession();
+                session.beginTransaction();
+                SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
+                Player player = session.load(Player.class, sessionInfo.getIdPlayer());
+                Response response = new Response();
+                if (!player.exit()){
+                    response.setError(ResponceErrorCode.CHEAT_OR_BUG);
+                }
+                commitTransactionAndSendResponse(t, mapper, session, response);
+                System.out.println(new Date() +" Thread " + Thread.currentThread().getId() + " stop Exit");
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
     static class UseSpell implements HttpHandler {
         @Override
         public void handle(HttpExchange t) {
@@ -674,7 +699,7 @@ public class Main {
                 SessionInfo sessionInfo = session.load(SessionInfo.class, request.getKey());
                 Player player = session.load(Player.class, sessionInfo.getIdPlayer());
                 Response response = new Response();
-                player.reset();
+                player.resetAccount();
                 commitTransactionAndSendResponse(t, mapper, session, response);
                 System.out.println(
                         new Date() +" Thread " + Thread.currentThread().getId() + " stop reset"

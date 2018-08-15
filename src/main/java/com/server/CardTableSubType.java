@@ -9,5 +9,7 @@ public final class CardTableSubType {
     static final byte MUTANT = 5;
     static final byte TRADER = 6;
     static final byte BLACKSMITH = 7;
+/*
     static final byte INNKEEPER = 8;
+*/
 }

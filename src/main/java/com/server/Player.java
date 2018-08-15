@@ -37,7 +37,7 @@ class Player {
     private static final byte INVENTORY_MAX_COUNT = 6;
     private static final byte LOOT_AND_TRADECARD_MAX_COUNT = 3;
     private static final byte ID_CHEST = 3;
-    private static final byte ID_PORTAL = 39;
+    private static final byte ID_INNKEEPER = 2;
     private static final byte ID_HUND = 1;
     private static final long LOGIN_COOLDOWN = 60000L;
     @Id
@@ -104,7 +104,7 @@ class Player {
     @Column(name="costVendorSkill")
     private Integer mCostVendorSkill;
     @Column(name="countMobsToPortal")
-    private Integer mCountMobsToPortal;
+    private Integer mCountMobsToExit;
     @Column(name="countMobsToVendor")
     private Integer mCountMobsToVendor;
     @Transient
@@ -166,7 +166,8 @@ class Player {
                             else{
                                 typeItem = random.nextInt(3)+1;
                             }
-                            mTrade.add(new CardTrade(
+                            mTrade.add(
+                                    new CardTrade(
                                             this,
                                             getCardLoot((byte)typeItem),
                                             i,
@@ -199,22 +200,6 @@ class Player {
                         }
                         break;
                     }
-                    case CardTableSubType.INNKEEPER:{
-                        for (byte i = 0; i < LOOT_AND_TRADECARD_MAX_COUNT; i++) {
-                            mTrade.add(
-                                    new CardTrade(
-                                            this,
-                                            getCardLoot(InventoryType.FOOD),
-                                            i,
-                                            false
-                                    )
-                            );
-                            System.out.println("INNKEEPER: "+mTrade.get(i).toString());
-                        }
-                        setCostVendorSkill();
-                        responceTrade.setSkillCost(mCostVendorSkill);
-                        break;
-                    }
                 }
                 responceTrade.setTrade(Util.convertItems(mTrade));
                 responseStr = getObjectMapper().writeValueAsString(responceTrade);
@@ -245,16 +230,26 @@ class Player {
                 responseStr = getObjectMapper().writeValueAsString(response);
                 break;
             }
-            case CardTableType.PORTAL:{
-                mState = State.NONE;
-                mCountMobsToPortal = 0;
-                mHP = 0;
-                mMoneyBank += mMoney;
-                mMoney = 0;
-                mInventory.clear();
-                mGearScore = 0;
-                mTopTwoGearScoreWeaponOrShieldInInventory = 0;
-                mTopOneGearScoreWeaponOrShieldInInventory = 0;
+            case CardTableType.INNKEEPER:{
+                mState = State.TRADE;
+                mCountMobsToVendor = 0;
+                ResponceTrade responceTrade = new ResponceTrade();
+
+                for (byte i = 0; i < LOOT_AND_TRADECARD_MAX_COUNT; i++) {
+                    mTrade.add(
+                            new CardTrade(
+                                    this,
+                                    getCardLoot(InventoryType.FOOD),
+                                    i,
+                                    false
+                            )
+                    );
+                    System.out.println("INNKEEPER: "+mTrade.get(i).toString());
+                }
+                setCostVendorSkill();
+                responceTrade.setSkillCost(mCostVendorSkill);
+                responceTrade.setTrade(Util.convertItems(mTrade));
+                responseStr = getObjectMapper().writeValueAsString(responceTrade);
                 break;
             }
         }
@@ -526,18 +521,22 @@ class Player {
         }
     }
 
-    void reset() {
+    void resetAccount() {
         dead();
         mMoneyBank = 0;
         mStats = new Stats();
     }
 
     void dead() {
+        mMoneyBank += mMoney/2;
+        resetGame();
+    }
+
+    void resetGame() {
         mState = State.NONE;
-        mCountMobsToPortal = 0;
+        mCountMobsToExit = 0;
         mCountMobsToVendor = 0;
         mHP = 0;
-        mMoneyBank += mMoney/2;
         mMoney = 0;
         mInventory.clear();
         mLoot.clear();
@@ -545,6 +544,15 @@ class Player {
         mGearScore = 0;
         mTopTwoGearScoreWeaponOrShieldInInventory = 0;
         mTopOneGearScoreWeaponOrShieldInInventory = 0;
+    }
+
+    boolean exit(){
+        if (mState == State.TRADE){
+            mMoneyBank += mMoney;
+            resetGame();
+            return true;
+        }
+        return false;
     }
 
     boolean selectLoot(CardInventory[] inventory){
@@ -672,7 +680,7 @@ class Player {
         if (mState == State.TRADE){
             if (mMoney >= mCostVendorSkill){
                 Mob mob = getMobs().get(mCardTableTargetID);
-                if (mob.getSubType()==CardTableSubType.INNKEEPER){
+                if (mob.getSubType()==CardTableType.INNKEEPER){
                     mMoney -= mCostVendorSkill;
                     mHP = (byte) (mBalance.getHP_DEFAULT() + mStats.getHPBonus());
                     return true;
@@ -840,7 +848,7 @@ class Player {
 
     private void deadMob(Mob mobTarget) {
         mState = State.SELECT_LOOT;
-        mCountMobsToPortal++;
+        mCountMobsToExit++;
         mCountMobsToVendor++;
         mMoney += mobTarget.getMoney();
         mStats.addExperience(mobTarget.getExperience());
@@ -919,10 +927,10 @@ class Player {
 
     private byte getCardTable() {
         Random random = new Random();
-        if (mCountMobsToPortal >= mBalance.getCARD_REQUIRED_TO_SPAWN_EXIT()){
+        if (mCountMobsToExit >= mBalance.getCARD_REQUIRED_TO_SPAWN_INNKEEPER()){
             if (random.nextBoolean()){
-                mCountMobsToPortal = 0;
-                return ID_PORTAL;
+                mCountMobsToExit = 0;
+                return ID_INNKEEPER;
             }
         }
         if (mCountMobsToVendor >= mBalance.getCARD_REQUIRED_TO_SPAWN_VENDOR()){
@@ -931,7 +939,10 @@ class Player {
                 return DataBase.VENDOR_ID.get(random.nextInt(DataBase.VENDOR_ID.size()));
             }
         }
+/*
         boolean chest = random.nextInt(mBalance.getCHANCE_CHEST())==0;
+*/
+        boolean chest = false;
         if(chest){
             return ID_CHEST;
         }
