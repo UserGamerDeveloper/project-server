@@ -284,7 +284,7 @@ class Player {
     }
 
     String getUseSkillTraderResponse() throws JsonProcessingException {
-        String response = getObjectMapper().writeValueAsString(mTrade);
+        String response = getObjectMapper().writeValueAsString(Util.convertItems(mTrade));
         System.out.println("getUseSkillTraderResponse: " + response);
         return response;
     }
