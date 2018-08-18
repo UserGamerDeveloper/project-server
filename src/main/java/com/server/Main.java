@@ -12,6 +12,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,6 +27,8 @@ import java.util.concurrent.Executors;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 
 import org.hibernate.Session;
+
+import static com.server.Util.getObjectMapper;
 
 public class Main {
     final static ExecutorService threadPool = Executors.newFixedThreadPool(4);
@@ -44,7 +47,31 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
-        Util.getSessionFactory().openSession();
+        Session session = Util.getSessionFactory().openSession();
+
+        session.beginTransaction();
+        List<Balance> balanceList = session.createNativeQuery(
+                "SELECT * FROM balance",
+                Balance.class
+        ).getResultList();
+        FileWriter writer = new FileWriter("balance.json", true);
+        writer.write(getObjectMapper().writeValueAsString(balanceList));
+        writer.flush();
+        List<Item> itemList = session.createNativeQuery(
+                "SELECT * FROM items",
+                Item.class
+        ).getResultList();
+        writer = new FileWriter("items.json", true);
+        writer.write(getObjectMapper().writeValueAsString(itemList));
+        writer.flush();
+        List<Mob> mobList = session.createNativeQuery(
+                "SELECT * FROM mobs",
+                Mob.class
+        ).getResultList();
+        writer = new FileWriter("mobs.json", true);
+        writer.write(getObjectMapper().writeValueAsString(mobList));
+        writer.flush();
+
         DirectExecutor directExecutor = new DirectExecutor();
         HttpServer server = HttpServer.create(new InetSocketAddress(5678), 0);
         server.createContext("/login", new Login());

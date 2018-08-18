@@ -1,5 +1,7 @@
 package com.server;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -402,6 +404,7 @@ class Balance {
         this.LVL20 = LVL20;
     }
 
+    @JsonIgnore
     public Player getPlayer() {
         return mPlayer;
     }
