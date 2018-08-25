@@ -49,6 +49,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         Session session = Util.getSessionFactory().openSession();
 
+        //region backup DB
         session.beginTransaction();
         List<Balance> balanceList = session.createNativeQuery(
                 "SELECT * FROM balance",
@@ -71,6 +72,7 @@ public class Main {
         writer = new FileWriter("mobs.json", true);
         writer.write(getObjectMapper().writeValueAsString(mobList));
         writer.flush();
+        //endregion
 
         DirectExecutor directExecutor = new DirectExecutor();
         HttpServer server = HttpServer.create(new InetSocketAddress(5678), 0);
@@ -106,7 +108,7 @@ public class Main {
             try {
                 return GoogleClientSecrets.load(
                         JacksonFactory.getDefaultInstance(), new FileReader(
-                                "C:\\Users\\Skatt\\Desktop\\server\\src\\main\\resources\\client_secret.json"
+                                "client_secret.json"
                         )
                 );
             }

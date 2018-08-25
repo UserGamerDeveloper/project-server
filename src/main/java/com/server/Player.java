@@ -684,7 +684,7 @@ class Player {
         if (mState == State.TRADE){
             if (mMoney >= mCostVendorSkill){
                 Mob mob = getMobs().get(mCardTableTargetID);
-                if (mob.getSubType()==CardTableType.INNKEEPER){
+                if (mob.getType()==CardTableType.INNKEEPER){
                     mMoney -= mCostVendorSkill;
                     mHP = (byte) (mBalance.getHP_DEFAULT() + mStats.getHPBonus());
                     return true;
