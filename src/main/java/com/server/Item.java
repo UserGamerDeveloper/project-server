@@ -11,7 +11,6 @@ import javax.persistence.Table;
 @Table(name = "items")
 class Item {
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
     @Column(name="id")
     private byte mID;
     @Column(name="VO")
@@ -64,5 +63,37 @@ class Item {
         mGearScore = gearScore;
         mMobGearScore = mobGearScore;
         mDurabilityMax = durability;
+    }
+
+    public void setID(byte ID) {
+        mID = ID;
+    }
+
+    public void setValueOne(byte valueOne) {
+        mValueOne = valueOne;
+    }
+
+    public void setType(int type) {
+        mType = type;
+    }
+
+    public void setDurabilityMax(byte durabilityMax) {
+        mDurabilityMax = durabilityMax;
+    }
+
+    public void setGearScore(byte gearScore) {
+        mGearScore = gearScore;
+    }
+
+    public void setMobGearScore(int mobGearScore) {
+        mMobGearScore = mobGearScore;
+    }
+    public void setBuyCost(int cost) {
+        mCost = cost;
+    }
+    public void setSellCost(int cost) {
+    }
+    public void setCost(int cost) {
+        mCost = cost;
     }
 }

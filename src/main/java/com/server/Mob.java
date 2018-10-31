@@ -11,9 +11,41 @@ import javax.persistence.Table;
 @Table(name="mobs")
 class Mob {
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
     @Column(name="id")
     private byte mID;
+
+    public void setID(byte ID) {
+        mID = ID;
+    }
+
+    public void setValueOne(int valueOne) {
+        mValueOne = valueOne;
+    }
+
+    public void setValueTwo(byte valueTwo) {
+        mValueTwo = valueTwo;
+    }
+
+    public void setMoney(int money) {
+        mMoney = money;
+    }
+
+    public void setType(int type) {
+        mType = type;
+    }
+
+    public void setGearScore(int gearScore) {
+        mGearScore = gearScore;
+    }
+
+    public void setSubType(int subType) {
+        mSubType = subType;
+    }
+
+    public void setExperience(int experience) {
+        mExperience = experience;
+    }
+
     @Column(name="VO")
     private int mValueOne;
     @Column(name="VT")

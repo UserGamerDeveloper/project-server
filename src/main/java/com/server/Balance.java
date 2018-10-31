@@ -14,7 +14,6 @@ import javax.persistence.Table;
 @Table(name="balance")
 class Balance {
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
     @Column(name="id")
     private int mID;
     @Column(name="GSR")
@@ -92,6 +91,9 @@ class Balance {
     @OneToOne(mappedBy = "mBalance")
     private Player mPlayer;
 
+    public Balance() {
+    }
+
     public float getVENDOR_SKILL_COST_K() {
         return VENDOR_SKILL_COST_K;
     }
@@ -117,26 +119,26 @@ class Balance {
 
     float[] getREQUIREMENT_EXPERIENCE(){
         return new float[]{
-                mPlayer.getBalance().getLVL1(),
-                mPlayer.getBalance().getLVL2(),
-                mPlayer.getBalance().getLVL3(),
-                mPlayer.getBalance().getLVL4(),
-                mPlayer.getBalance().getLVL5(),
-                mPlayer.getBalance().getLVL6(),
-                mPlayer.getBalance().getLVL7(),
-                mPlayer.getBalance().getLVL8(),
-                mPlayer.getBalance().getLVL9(),
-                mPlayer.getBalance().getLVL10(),
-                mPlayer.getBalance().getLVL11(),
-                mPlayer.getBalance().getLVL12(),
-                mPlayer.getBalance().getLVL13(),
-                mPlayer.getBalance().getLVL14(),
-                mPlayer.getBalance().getLVL15(),
-                mPlayer.getBalance().getLVL16(),
-                mPlayer.getBalance().getLVL17(),
-                mPlayer.getBalance().getLVL18(),
-                mPlayer.getBalance().getLVL19(),
-                mPlayer.getBalance().getLVL20()
+                getLVL1(),
+                getLVL2(),
+                getLVL3(),
+                getLVL4(),
+                getLVL5(),
+                getLVL6(),
+                getLVL7(),
+                getLVL8(),
+                getLVL9(),
+                getLVL10(),
+                getLVL11(),
+                getLVL12(),
+                getLVL13(),
+                getLVL14(),
+                getLVL15(),
+                getLVL16(),
+                getLVL17(),
+                getLVL18(),
+                getLVL19(),
+                getLVL20()
         };
     }
 

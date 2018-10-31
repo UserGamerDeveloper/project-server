@@ -58,13 +58,15 @@ class Stats {
     @OneToOne(mappedBy = "mStats")
     private Player mPlayer;
 
-    Stats() {
+    Stats() {}
+    Stats(Player player) {
         mLevel = 0;
         mExperienceValue = 0;
         mDamagePoints = 0;
         mDefencePoints = 0;
         mHPPoints = 0;
         mPoints = 0;
+        mPlayer = player;
     }
 
     public byte getLevel() {

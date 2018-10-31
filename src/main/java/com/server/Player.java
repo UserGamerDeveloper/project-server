@@ -118,7 +118,8 @@ class Player {
         mMoneyBank = 0;
         mMoney = 0;
         mIsLogin = true;
-        mStats = new Stats();
+        mBalance = Util.getSessionFactory().openSession().get(Balance.class, 1);
+        mStats = new Stats(this);
     }
     public Player() {}
 
@@ -315,6 +316,8 @@ class Player {
         try{
             if (checkStartInventory(startItemId)){
                 mGearScore = mStats.getGearScoreBonus();
+                mCountMobsToExit = 0;
+                mCountMobsToVendor = 0;
                 ArrayList<Byte> gearScoreWeaponOrShieldInInventory = new ArrayList<>();
                 Item handOne = DataBase.getItems().get(startItemId[4]);
                 if (startItemId[4]!=1){
@@ -524,7 +527,7 @@ class Player {
     void resetAccount() {
         dead();
         mMoneyBank = 0;
-        mStats = new Stats();
+        mStats = new Stats(this);
     }
 
     void dead() {

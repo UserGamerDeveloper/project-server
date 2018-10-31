@@ -18,8 +18,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,6 +50,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
+
         Session session = Util.getSessionFactory().openSession();
 
         //region backup DB
@@ -72,6 +76,34 @@ public class Main {
         writer = new FileWriter("mobs.json", true);
         writer.write(getObjectMapper().writeValueAsString(mobList));
         writer.flush();
+        //endregion
+
+        //region restore DB
+/*
+        session.beginTransaction();
+        FileReader reader = new FileReader("balance.json");
+        Scanner scan = new Scanner(reader);
+        Balance[] balances = getObjectMapper().readValue(scan.nextLine(), Balance[].class);
+        for (Balance balance:balances) {
+            session.save(balance);
+        }
+        session.flush();
+        reader = new FileReader("items.json");
+        scan = new Scanner(reader);
+        Item[] items = getObjectMapper().readValue(scan.nextLine(), Item[].class);
+        for (Item item:items) {
+            session.save(item);
+        }
+        session.flush();
+        reader = new FileReader("mobs.json");
+        scan = new Scanner(reader);
+        Mob[] mobs = getObjectMapper().readValue(scan.nextLine(), Mob[].class);
+        for (Mob mob:mobs) {
+            session.save(mob);
+        }
+        session.flush();
+        session.getTransaction().commit();
+*/
         //endregion
 
         DirectExecutor directExecutor = new DirectExecutor();
@@ -187,6 +219,8 @@ public class Main {
                 else {
                         if (payload.getEmailVerified()){
                             Player player = new Player(payload.getEmail());
+                            player.setLogin(true);
+                            player.setLoginTime(new Timestamp(new Date().getTime()));
                             session.save(player);
                             session.flush();
                             SessionInfo sessionInfo = new SessionInfo(player.getID(),request.getKey());
